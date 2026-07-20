@@ -143,13 +143,18 @@ body.phone-mode #dpad { display: grid; }
 #layout-edit-btn { display: none; }
 body.phone-mode #layout-edit-btn { display: inline-block; }
 
-/* Dashed outline while draggable, so it's obvious which two elements
-   respond to touch once edit mode is on (toggled via JS, not a body class,
-   since it only ever applies to these two specific elements). */
-#dpad.layout-editing, #arena-layout-wrap.layout-editing {
+/* Dashed outline while draggable, so it's obvious which elements respond to
+   touch once edit mode is on (toggled via JS, not a body class, since it
+   only ever applies to these specific elements). */
+#dpad.layout-editing, #arena-layout-wrap.layout-editing, #dialogue-layout-wrap.layout-editing {
   outline: 2px dashed #aa88cc;
   outline-offset: 4px;
 }
+
+/* z-index:3 — highest of the three draggable elements, so dialogue text
+   stays legible on top if dragged over the arena (1) or D-pad (2). Position
+   is needed for its own .resize-handle child to anchor correctly. */
+#dialogue-layout-wrap { position: relative; z-index: 3; }
 
 .resize-handle {
   display: none;

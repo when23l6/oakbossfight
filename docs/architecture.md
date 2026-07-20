@@ -30,10 +30,10 @@ src/
                      the only way old stats come back is loading a code), saveCode.js
                      (encode/decode the portable save-code + summary-key strings; save code
                      silently carries usedTestGui + madMode + per-phase death counts), phoneLayout.js
-                     (custom D-pad/arena position+scale overrides set via ui/layoutEditor.js,
-                     persisted to localStorage separately from the save key — a device/UI
-                     preference, not game progress, so CLEAR KEY and the every-join stats reset
-                     above don't touch it)
+                     (custom D-pad/arena/dialogue position+scale overrides set via
+                     ui/layoutEditor.js, persisted to localStorage separately from the save key — a
+                     device/UI preference, not game progress, so CLEAR KEY and the every-join stats
+                     reset above don't touch it)
   core/              canvasRefs.js (DOM/canvas refs), particles.js, input.js (listeners), loop.js
                      (fixed-timestep accumulator: loop(now) runs updateOnce() 1+ times per rAF
                      callback — more than once if the render-frame gap implies fps<15, capped at
@@ -59,10 +59,12 @@ src/
                      layoutEditor.js needs to convert a screen-pixel drag into local movement),
                      touchControls.js (wires the on-screen d-pad to S.keys[...], phone mode only),
                      layoutEditor.js (phone-mode-only: drag-to-move + resize-handle logic for the
-                     D-pad and #arena-layout-wrap — a dedicated wrapper around #arena-section, since
-                     core/loopDraw.js already writes that element's own .style.transform every frame
-                     for gameplay VFX and would otherwise fight a persistent layout transform on the
-                     same element; exports isLayoutEditActive(), checked by inputBlock.js so normal
+                     D-pad, #arena-layout-wrap, and #dialogue-layout-wrap — dedicated wrappers around
+                     #arena-section and #dialogue, since core/loopDraw.js already writes the arena's
+                     own .style.transform every frame for gameplay VFX and ui/menu.js's say() replaces
+                     #dialogue's children wholesale on every line, either of which would otherwise
+                     fight/destroy a persistent layout transform or resize handle living directly on
+                     those elements; exports isLayoutEditActive(), checked by inputBlock.js so normal
                      input pauses while editing, and applyPhoneLayout(), called from
                      modeSelect.js's chooseMode()),
                      phaseSavePopup.js (exports checkPhaseChange(), called from core/loop.js; on any
