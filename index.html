@@ -182,8 +182,28 @@
   <div id="save-load-msg"></div>
 
   <div style="text-align:center;margin-top:14px;">
-    <button class="test-btn" onclick="toggleGameSpeedPanel()">GAMESPEED</button>
     <button class="test-btn" onclick="toggleSaveMenu()">CLOSE</button>
+  </div>
+</div>
+
+<!-- Settings: currently just a launcher for the GAMESPEED panel, but exists
+     as its own popup (not squeezed into the SAVE/LOAD menu above) so future
+     settings have a natural home separate from save/progress concerns.
+     Same small centered .popup-modal + shared #popup-backdrop pattern as
+     #save-menu / #summary-view-modal. -->
+<div id="settings-menu" class="popup-modal">
+  <div style="font-family:'VT323',monospace;font-size:20px;color:#aa88cc;letter-spacing:3px;margin-bottom:6px;text-align:center;">── SETTINGS ──</div>
+
+  <div style="text-align:center;margin:12px 0;">
+    <!-- Closes #settings-menu first, not just toggleGameSpeedPanel() alone
+         — that function refuses to open "underneath another popup"
+         (isInputBlocked()), and this button lives INSIDE #settings-menu,
+         which is by definition still .show-ing at the moment it's clicked. -->
+    <button class="test-btn" onclick="openGameSpeedFromSettings()">GAMESPEED</button>
+  </div>
+
+  <div style="text-align:center;margin-top:14px;">
+    <button class="test-btn" onclick="toggleSettingsMenu()">CLOSE</button>
   </div>
 </div>
 
@@ -219,6 +239,15 @@
     <div id="boss-bg"></div>
     <div id="stats-readout">TIME 0:00 · DEATHS 0</div>
     <button id="save-btn" onclick="toggleSaveMenu()" style="position:absolute;top:32px;right:14px;z-index:3;font-family:'VT323',monospace;font-size:12px;background:none;border:1px solid #443344;color:#886688;padding:1px 8px;cursor:pointer;letter-spacing:1px;">SAVE ▾</button>
+    <!-- Visible in both modes, unlike #layout-edit-btn/#gamespeed-btn below
+         (those two are phone-only — computer reaches the same features via
+         keybind/the layout editor isn't available on computer at all).
+         Placed after the two phone-only slots (14/70/126) so it doesn't
+         collide with them when phone-mode shows all four; leaves a visual
+         gap on computer where those two are hidden, a minor cosmetic
+         tradeoff for keeping every corner button's position fixed rather
+         than mode-dependent. -->
+    <button id="settings-btn" onclick="toggleSettingsMenu()" style="position:absolute;top:32px;right:182px;z-index:3;font-family:'VT323',monospace;font-size:12px;background:none;border:1px solid #443344;color:#886688;padding:1px 8px;cursor:pointer;letter-spacing:1px;">SETTINGS ▾</button>
     <!-- Phone-mode-only layout editor entry point — lets the player drag-
          reposition and resize the D-pad and arena (src/ui/layoutEditor.js).
          Hidden by default, shown only in body.phone-mode (styles/responsive.css),
@@ -227,7 +256,10 @@
     <!-- Phone-mode-only entry point for the GAMESPEED panel (src/ui/gameSpeedPanel.js)
          — no keyboard to use a custom keybind with on phone, so this button opens
          it directly instead. Same gating pattern as #layout-edit-btn above. -->
-    <button id="gamespeed-btn" onclick="toggleGameSpeedPanel()" style="position:absolute;top:32px;right:126px;z-index:3;font-family:'VT323',monospace;font-size:12px;background:none;border:1px solid #443344;color:#886688;padding:1px 6px;cursor:pointer;">⏱<div class="resize-handle" id="gamespeed-btn-resize-handle" style="display:none;">⤡</div></button>
+    <!-- z-index:4 — highest of the layout editor's draggable elements
+         (arena:1, dpad:2, dialogue:3 in styles/responsive.css), so this
+         button stays on top and clickable no matter what it's dragged over. -->
+    <button id="gamespeed-btn" onclick="toggleGameSpeedPanel()" style="position:absolute;top:32px;right:126px;z-index:4;font-family:'VT323',monospace;font-size:12px;background:none;border:1px solid #443344;color:#886688;padding:1px 6px;cursor:pointer;">⏱<div class="resize-handle" id="gamespeed-btn-resize-handle" style="display:none;">⤡</div></button>
     <div id="boss-name-area">
       <div id="boss-mad" style="display:none;font-family:'VT323',monospace;font-size:13px;color:#fff;letter-spacing:2px;margin-bottom:2px;">!!! MAD !!!</div>
       <div id="boss-name">Professor Oak</div>
