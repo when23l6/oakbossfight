@@ -12,7 +12,7 @@ main file so the import path consumers use doesn't change.
 
 ```
 index.html          Markup shell + <link> to styles + <script type=module src=src/main.js>
-                    (352 lines — over the 300-line/file guideline; flagged rather than split,
+                    (331 lines — over the 300-line/file guideline; flagged rather than split,
                     since a single-page no-build-step HTML entry point has no clean equivalent
                     to JS's import/re-export for markup without adding runtime fetch()-and-inject
                     complexity for little benefit)
@@ -44,27 +44,40 @@ src/
   core/              canvasRefs.js (DOM/canvas refs), particles.js, input.js (listeners), loop.js
                      (fixed-timestep accumulator: loop(now) runs updateOnce() 1+ times per rAF
                      callback — more than once if the render-frame gap implies fps<15, capped at
-                     MAX_STEPS_PER_FRAME — then draws once via loopDraw.js's drawOnce(); floors
+                     MAX_STEPS_PER_FRAME=20 — then draws once via loopDraw.js's drawOnce(); floors
                      simulation at ~15 ticks/sec without changing behavior at fps>=15, UNLESS
                      state/gameSpeed.js's `enabled` flag is on, in which case that floor becomes a
                      hard cap at the custom rate instead (no forced minimum tick per frame, so a
-                     high render fps no longer means a faster game). Also calls
-                     ui/phaseSavePopup.js's checkPhaseChange() as the last thing in every tick, not
-                     just once per frame — see that file for why the ordering matters), loopDraw.js
-                     (drawOnce() — pure rendering, split out of loop.js to stay under 300 lines)
+                     high render fps no longer means a faster game). MAX_STEPS_PER_FRAME=20 (not 6)
+                     specifically so a custom rate near MAX_RATE=120 is actually reachable — 6 was
+                     only enough catch-up headroom for the 15/sec default floor, and silently
+                     throttled higher custom rates once render fps dipped much below ~20. Also
+                     decrements S.pHitFlash/bossHitFlash/bossHealFlash and calls
+                     ui/phaseSavePopup.js's checkPhaseChange() and core/tickTimer.js's tickTimers()
+                     once per tick, not once per rendered frame like they used to (see loopDraw.js
+                     entry below for why that distinction mattered) — checkPhaseChange() ordering
+                     specifically must stay last, see that file for why), loopDraw.js (drawOnce() —
+                     pure rendering, split out of loop.js to stay under 300 lines; deliberately does
+                     NOT decrement any gameplay timer itself anymore — boss/render/*.js's per-phase
+                     draw functions and boss/render/playerRender.js used to decrement
+                     bossHitFlash/pHitFlash themselves once per rendered frame, which drifted from
+                     gamespeed once ticks and frames stopped being 1:1; those now only read the
+                     value for their flicker/vignette effects), tickTimer.js (scheduleTicks()/
+                     msToTicks() — a tick-driven alternative to setTimeout() for gameplay pacing
+                     that should scale with gamespeed, e.g. attack windups in boss/zones.js and the
+                     taunt counterattack delay in actions/act.js; msToTicks() calibrates against a
+                     60-ticks/sec reference so existing "300ms"-style call sites keep meaning the
+                     same real-world duration whenever gamespeed is off. UI-only delays — death/win
+                     overlay fades, "Copied!" message reverts, etc. — deliberately still use plain
+                     setTimeout(), since those are one-shot presentation beats, not repeating
+                     gameplay mechanics)
   ui/                menu.js (say/updateHP/buildSub/selectAction/...), overlay.js (win/lose/reset),
                      statsDisplay.js (ticks + renders the TIME/DEATHS corner readout),
                      saveLoad.js (save/load popup — generates/applies a saveCode.js code; also
                      detects+displays a pasted-in summary key via the read-only popup; exports
                      applyDecodedSave(data), shared by both its own LOAD button and
-                     autoSavePopup.js's, and setBackdrop(), shared by settingsMenu.js; CLEAR KEY
-                     sends the player back to the start of phase 1, not just resetting the
-                     displayed code's stats/flags), settingsMenu.js (#settings-btn — visible in both
-                     modes, unlike the phone-only buttons below — opens #settings-menu, currently
-                     just a GAMESPEED launcher but its own popup so future settings don't have to
-                     live inside the SAVE/LOAD menu; openGameSpeedFromSettings() closes this menu
-                     before opening the gamespeed panel, same reason as the chooseMode() ordering
-                     below — gameSpeedPanel.js's open refuses to run "underneath another popup"),
+                     autoSavePopup.js's; CLEAR KEY sends the player back to the start of phase 1,
+                     not just resetting the displayed code's stats/flags),
                      phaseJump.js (jumpToPhase() — shared "reset to the start of phase N" used by
                      saveLoad.js, secretTestGui.js, and CLEAR KEY), modeSelect.js (Computer/Phone
                      gate, shown every page load; chooseMode() also calls autoSavePopup.js's
@@ -84,12 +97,14 @@ src/
                      #gamespeed-btn have no such conflict, so they're targeted directly); exports
                      isLayoutEditActive(), checked by inputBlock.js so normal input pauses while
                      editing, and applyPhoneLayout(), called from modeSelect.js's chooseMode()),
-                     gameSpeedPanel.js (GAMESPEED popup — +/- the custom tick rate, toggle it on/off,
-                     and on computer rebind which key opens the panel — own dedicated keydown
-                     listener rather than folding into core/input.js's, since isInputBlocked()
-                     already makes that whole handler bail out while this panel/rebind-capture is
-                     open; #gamespeed-btn opens it directly on phone instead, no keyboard there;
-                     exports isGameSpeedPanelOpen(), checked by inputBlock.js),
+                     gameSpeedPanel.js (GAMESPEED popup, opened by #gamespeed-btn — visible in the
+                     same spot in both modes — to +/- the custom tick rate or (computer only) rebind
+                     the keybind via SET; own dedicated keydown listener rather than folding into
+                     core/input.js's, since isInputBlocked() already makes that whole handler bail
+                     out while this panel/rebind-capture is open. The keybind itself is a SEPARATE
+                     shortcut from opening this panel — pressing it directly flips custom speed
+                     on/off (setEnabled()) without opening anything; exports isGameSpeedPanelOpen(),
+                     checked by inputBlock.js),
                      phaseSavePopup.js (exports checkPhaseChange(), called from core/loop.js; on any
                      S.phase change, pops up a save code reminder, and also persists that same code
                      to localStorage under saveCode.js's AUTOSAVE_KEY for autoSavePopup.js to offer
@@ -103,11 +118,11 @@ src/
                      corridor-chain attack picker, unlocked only by loading the page with the
                      correct secret code as a ?k= URL param; the code is stored here only as a
                      SHA-256 hash, no visible trigger anywhere), inputBlock.js
-                     (isInputBlocked() — true while any of the 6 popups above is open, or while
+                     (isInputBlocked() — true while any of the 5 popups above is open, or while
                      layoutEditor.js's edit mode or gameSpeedPanel.js's panel is active; checked by
                      input.js + touchControls.js so keyboard/D-pad can't drive the game underneath
-                     one — CSS stacking alone only blocks mouse/touch clicks). All 6 popups +
-                     #popup-backdrop (shared click-blocker for the 3 that aren't already
+                     one — CSS stacking alone only blocks mouse/touch clicks). All 5 popups +
+                     #popup-backdrop (shared click-blocker for the 2 that aren't already
                      full-screen) + the layout editor's toolbar live outside #game-wrapper, like
                      #mode-select — see index.html comments for why.
   actions/           fight.js item.js usb.js act.js mercy.js — one player action handler each

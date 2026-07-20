@@ -144,16 +144,14 @@ body.phone-mode #dpad { display: grid; }
 body.phone-mode #layout-edit-btn { display: inline-block; }
 
 /* ── GAMESPEED PANEL (src/ui/gameSpeedPanel.js) ── */
-/* #gamespeed-btn: same phone-only gating as #layout-edit-btn — computer
-   uses a player-assignable keybind instead (no persistent button there).
-   #gamespeed-keybind-row: the inverse — there's no keyboard to rebind with
-   on phone, so that row is hidden there. display:flex has to live here
-   rather than as an inline style on the element (index.html) so the
-   phone-mode override below — same specificity family, just a more
-   qualified selector — can actually win; an inline style would beat any
-   external rule regardless of selector specificity. */
-#gamespeed-btn { display: none; }
-body.phone-mode #gamespeed-btn { display: inline-block; }
+/* #gamespeed-btn itself is visible in both modes (no gating here) — the
+   keybind is a separate on/off shortcut, not this button's only way in.
+   #gamespeed-keybind-row: there's no keyboard to rebind with on phone, so
+   that row is hidden there. display:flex has to live here rather than as
+   an inline style on the element (index.html) so the phone-mode override
+   below — same specificity family, just a more qualified selector — can
+   actually win; an inline style would beat any external rule regardless of
+   selector specificity. */
 #gamespeed-keybind-row { display: flex; }
 body.phone-mode #gamespeed-keybind-row { display: none; }
 

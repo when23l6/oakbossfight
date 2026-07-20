@@ -104,6 +104,12 @@ export function updateHealOrbsPhase(){
 
 export function updateHealOrbs(){
   if(!S.healOrbs||S.healOrbs.length===0) return;
+  // Moved here from render/group1Draw.js — that decremented once per
+  // rendered frame, drifting from gamespeed once ticks and frames stopped
+  // being 1:1; this runs once per tick instead. Orbs never get spliced out
+  // of S.healOrbs (they persist as state==='done'), so this array is never
+  // empty again once populated — safe past the early return above.
+  if(S._healVfxTimer>0) S._healVfxTimer--;
 
   // Count how many orbs are currently flying back in (state==='flyback')
   // so we only allow one at a time

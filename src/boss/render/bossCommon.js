@@ -184,6 +184,8 @@ export function drawBoss(tick){
 
   // VIGNETTE
   if(!flash) drawVignette(ctx,W,H,0.12,0.78,0.68,0.6);
-
-  if(S.bossHitFlash>0) S.bossHitFlash--;
+  // S.bossHitFlash decrements once per tick in core/loop.js's updateOnce(),
+  // not here — see that file for why (this used to decrement once per
+  // rendered frame instead, which drifted from gamespeed once ticks and
+  // frames stopped being 1:1).
 }

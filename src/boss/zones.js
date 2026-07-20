@@ -15,6 +15,7 @@ import { beginCorridor } from './attacks/corridor.js';
 import { updateZones } from './zonesUpdate.js';
 import { scheduleLegacyA } from './zonesLegacyA.js';
 import { scheduleLegacyB } from './zonesLegacyB.js';
+import { scheduleTicks, msToTicks } from '../core/tickTimer.js';
 
 // Each zone: {x,y,w,h, warn, active, done, color, warnDur, activeDur, startTick}
 // warn phase: transparent flashing danger overlay
@@ -63,51 +64,57 @@ function scheduleZones(atk){
   scheduleLegacyA(atk, ph2, ph3, IW, IH);
   scheduleLegacyB(atk, ph2, ph3, ph4, IW, IH);
 
+  // Windup delays below use scheduleTicks() (core/tickTimer.js), not
+  // setTimeout() — these are gameplay pacing (how long before the attack
+  // actually starts), so they scale with gamespeed like everything else
+  // tick-driven instead of staying a fixed real-world pause regardless of
+  // how fast the game is set to run.
+
   // Walls: handled by updateWalls, scheduleZones just sets a long atkDur
   if(atk==='walls'){
     S.atkDur=99999; // handled by updateWalls
-    setTimeout(()=>{ if(S.attack==='walls') beginWalls(); }, 300);
+    scheduleTicks(msToTicks(300), ()=>{ if(S.attack==='walls') beginWalls(); });
   }
 
   // Dropper: handled by updateDropper, scheduleZones just sets a long atkDur
   if(atk==='dropper'){
     S.atkDur=99999; // updateDropper will end the attack itself
     // Kick off the dropper phase after a short delay
-    setTimeout(()=>{ if(S.attack==='dropper') beginDropper(); }, 400);
+    scheduleTicks(msToTicks(400), ()=>{ if(S.attack==='dropper') beginDropper(); });
   }
 
   // Rifle: handled entirely by updateRifle/drawRifle
   if(atk==='rifle'){
     S.atkDur=99999;
-    setTimeout(()=>{ if(S.attack==='rifle') beginRifle(); }, 300);
+    scheduleTicks(msToTicks(300), ()=>{ if(S.attack==='rifle') beginRifle(); });
   }
 
   // Ricochet: bullet bounces 5 times, re-aims at player each bounce
   if(atk==='ricochet'){
     S.atkDur=99999;
-    setTimeout(()=>{ if(S.attack==='ricochet') beginRicochet(); }, 300);
+    scheduleTicks(msToTicks(300), ()=>{ if(S.attack==='ricochet') beginRicochet(); });
   }
 
   // Rapidfire: 20 bullets fired one at a time, each aimed at player's current pos
   if(atk==='rapidfire'){
     S.atkDur=99999;
-    setTimeout(()=>{ if(S.attack==='rapidfire') beginRapidfireAttack(); }, 300);
+    scheduleTicks(msToTicks(300), ()=>{ if(S.attack==='rapidfire') beginRapidfireAttack(); });
   }
 
   // Grenade: 3 grenades thrown simultaneously, arc to random spots, show blast radius, explode
   if(atk==='grenade'){
     S.atkDur=99999;
-    setTimeout(()=>{ if(S.attack==='grenade') beginGrenade(); }, 300);
+    scheduleTicks(msToTicks(300), ()=>{ if(S.attack==='grenade') beginGrenade(); });
   }
 
   // Phase 7 attacks: stay on player turn during delay so game loop doesn't softlock
   if(atk==='possession'||atk==='compulsion'||atk==='blindchase'||atk==='corridor'){
     S.atkDur=99999;
     S.turn='player'; elMenu.style.display='none'; say('...');
-    if(atk==='possession')  setTimeout(()=>{ if(S.attack==='possession') { S.turn='boss'; beginPossession(); }}, 1000);
-    if(atk==='compulsion')  setTimeout(()=>{ if(S.attack==='compulsion') { S.turn='boss'; beginCompulsion(); }}, 1000);
-    if(atk==='blindchase')  setTimeout(()=>{ if(S.attack==='blindchase') { S.turn='boss'; beginBlindchase(); }}, 1000);
-    if(atk==='corridor')    setTimeout(()=>{ if(S.attack==='corridor')   { S.turn='boss'; beginCorridor(); }},   1000);
+    if(atk==='possession')  scheduleTicks(msToTicks(1000), ()=>{ if(S.attack==='possession') { S.turn='boss'; beginPossession(); }});
+    if(atk==='compulsion')  scheduleTicks(msToTicks(1000), ()=>{ if(S.attack==='compulsion') { S.turn='boss'; beginCompulsion(); }});
+    if(atk==='blindchase')  scheduleTicks(msToTicks(1000), ()=>{ if(S.attack==='blindchase') { S.turn='boss'; beginBlindchase(); }});
+    if(atk==='corridor')    scheduleTicks(msToTicks(1000), ()=>{ if(S.attack==='corridor')   { S.turn='boss'; beginCorridor(); }});
   }
 }
 

@@ -4,11 +4,11 @@
 // "floor at 15/sec, otherwise match render fps" to "hard-target `rate`
 // ticks/sec regardless of render fps" once this is turned on.
 //
-// Opened via a custom, player-assignable keybind on computer (SET below).
-// There's no keyboard on phone, so #gamespeed-btn (index.html, phone-mode
-// only, same pattern as the layout editor's gear button) opens it there
-// instead. Either way it's also reachable from the SAVE menu as a GAMESPEED
-// button, so the feature is discoverable before any keybind is ever set.
+// #gamespeed-btn (index.html) opens this panel — visible and in the same
+// spot on both computer and phone, to adjust the rate or (computer only,
+// via SET below) rebind the keybind. That keybind is a SEPARATE shortcut:
+// pressing it directly flips custom speed on/off, it does NOT open this
+// panel — see the keydown listener at the bottom.
 import { getGameSpeed, setRate, setEnabled, setKeybind, RATE_STEP } from '../state/gameSpeed.js';
 import { isInputBlocked } from './inputBlock.js';
 
@@ -60,11 +60,16 @@ function startGameSpeedRebind(){
 // Own dedicated keydown listener rather than folding into core/input.js's
 // existing handler — isInputBlocked() (which this panel is now part of)
 // already makes that handler bail out entirely whenever this panel is
-// open, so there's no conflict during rebind capture. Once the panel is
-// closed and a keybind is set, though, that key still does whatever it
-// normally does elsewhere too (e.g. picking 'z' would both confirm a menu
-// AND toggle this panel) — an accepted tradeoff of giving the player a
-// fully unrestricted choice of key; nothing here steers them away from it.
+// open, so there's no conflict during rebind capture. Once a keybind is
+// set, that key still does whatever it normally does elsewhere too outside
+// this listener (e.g. picking 'z' would both confirm a menu AND toggle
+// custom speed) — an accepted tradeoff of giving the player a fully
+// unrestricted choice of key; nothing here steers them away from it.
+//
+// Pressing the keybind toggles custom speed on/off directly — it does NOT
+// open the panel. refresh() is still called so the panel's ON/OFF readout
+// stays correct if it happens to already be open (e.g. rebinding from
+// within it, then testing the new key without closing first).
 window.addEventListener('keydown', e=>{
   if(document.body.classList.contains('phone-mode')) return;
   if(rebindWaiting){
@@ -75,7 +80,8 @@ window.addEventListener('keydown', e=>{
   }
   const s = getGameSpeed();
   if(!s.keybind || e.key !== s.keybind) return;
-  toggleGameSpeedPanel();
+  setEnabled(!s.enabled);
+  refresh();
 });
 
 export { toggleGameSpeedPanel, closeGameSpeedPanel, incRate, decRate, toggleGameSpeedEnabled, startGameSpeedRebind };

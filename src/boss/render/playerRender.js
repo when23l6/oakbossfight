@@ -58,7 +58,6 @@ export function drawPlayerHeart(ctx) {
       ctx.fillRect(px - 7, py + 3, 5, 4); ctx.fillRect(px + 2, py + 3, 5, 4);
       ctx.fillRect(px - 5, py + 7, 10, 4); ctx.fillRect(px - 3, py + 11, 6, 3);
     }
-    // hit flash burst particles
     // Second heart (split phase right side)
     if (S.splitPhase && (S.p2HitFlash <= 0 || S.tick % 6 < 3)) {
       ctx.fillStyle = '#4488ff';
@@ -69,9 +68,22 @@ export function drawPlayerHeart(ctx) {
       ctx.fillRect(p2x - 7, p2y + 3, 5, 4); ctx.fillRect(p2x + 2, p2y + 3, 5, 4);
       ctx.fillRect(p2x - 5, p2y + 7, 10, 4); ctx.fillRect(p2x - 3, p2y + 11, 6, 3);
     }
-    if (S.pHitFlash === 29) {
-      spawnParticles(S.px, S.py, (S.gravity || S.quadPhase) ? '#4488ff' : '#ff0044', 10, 3, 16);
-    }
-    if (S.pHitFlash > 0) S.pHitFlash--;
   }
+}
+
+// Decrements S.pHitFlash and spawns the hit-particle burst — called once
+// per logic TICK (core/loop.js's updateOnce()), NOT once per rendered
+// frame like it used to be. That distinction matters once ticks and
+// rendered frames aren't 1:1 (any custom gamespeed rate, or the default
+// floor's catch-up ticks below 15fps): decrementing here on every tick
+// means the flash duration — and the moment this hits exactly 29, which is
+// when the burst fires — scale with gamespeed instead of staying tied to
+// render fps. drawPlayerHeart() above only ever READS pHitFlash (the
+// flicker gate + <=0 check) and must not also decrement it, or a frame
+// with multiple ticks would double (or triple, etc.) count.
+export function updatePlayerHitFlash(){
+  if (S.pHitFlash === 29) {
+    spawnParticles(S.px, S.py, (S.gravity || S.quadPhase) ? '#4488ff' : '#ff0044', 10, 3, 16);
+  }
+  if (S.pHitFlash > 0) S.pHitFlash--;
 }

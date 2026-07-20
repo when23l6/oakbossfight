@@ -186,27 +186,6 @@
   </div>
 </div>
 
-<!-- Settings: currently just a launcher for the GAMESPEED panel, but exists
-     as its own popup (not squeezed into the SAVE/LOAD menu above) so future
-     settings have a natural home separate from save/progress concerns.
-     Same small centered .popup-modal + shared #popup-backdrop pattern as
-     #save-menu / #summary-view-modal. -->
-<div id="settings-menu" class="popup-modal">
-  <div style="font-family:'VT323',monospace;font-size:20px;color:#aa88cc;letter-spacing:3px;margin-bottom:6px;text-align:center;">── SETTINGS ──</div>
-
-  <div style="text-align:center;margin:12px 0;">
-    <!-- Closes #settings-menu first, not just toggleGameSpeedPanel() alone
-         — that function refuses to open "underneath another popup"
-         (isInputBlocked()), and this button lives INSIDE #settings-menu,
-         which is by definition still .show-ing at the moment it's clicked. -->
-    <button class="test-btn" onclick="openGameSpeedFromSettings()">GAMESPEED</button>
-  </div>
-
-  <div style="text-align:center;margin-top:14px;">
-    <button class="test-btn" onclick="toggleSettingsMenu()">CLOSE</button>
-  </div>
-</div>
-
 <!-- Summary key view: read-only stats snapshot decoded from a summary key
      (see src/state/saveCode.js decodeSummaryKey). Never touches game state. -->
 <div id="summary-view-modal" class="popup-modal">
@@ -239,23 +218,23 @@
     <div id="boss-bg"></div>
     <div id="stats-readout">TIME 0:00 · DEATHS 0</div>
     <button id="save-btn" onclick="toggleSaveMenu()" style="position:absolute;top:32px;right:14px;z-index:3;font-family:'VT323',monospace;font-size:12px;background:none;border:1px solid #443344;color:#886688;padding:1px 8px;cursor:pointer;letter-spacing:1px;">SAVE ▾</button>
-    <!-- Visible in both modes, unlike #layout-edit-btn/#gamespeed-btn below
-         (those two are phone-only — computer reaches the same features via
-         keybind/the layout editor isn't available on computer at all).
-         Placed after the two phone-only slots (14/70/126) so it doesn't
-         collide with them when phone-mode shows all four; leaves a visual
-         gap on computer where those two are hidden, a minor cosmetic
-         tradeoff for keeping every corner button's position fixed rather
-         than mode-dependent. -->
-    <button id="settings-btn" onclick="toggleSettingsMenu()" style="position:absolute;top:32px;right:182px;z-index:3;font-family:'VT323',monospace;font-size:12px;background:none;border:1px solid #443344;color:#886688;padding:1px 8px;cursor:pointer;letter-spacing:1px;">SETTINGS ▾</button>
     <!-- Phone-mode-only layout editor entry point — lets the player drag-
          reposition and resize the D-pad and arena (src/ui/layoutEditor.js).
          Hidden by default, shown only in body.phone-mode (styles/responsive.css),
          matching how #dpad itself is gated. -->
     <button id="layout-edit-btn" onclick="toggleLayoutEdit()" style="position:absolute;top:32px;right:70px;z-index:3;font-family:'VT323',monospace;font-size:12px;background:none;border:1px solid #443344;color:#886688;padding:1px 6px;cursor:pointer;">⚙</button>
-    <!-- Phone-mode-only entry point for the GAMESPEED panel (src/ui/gameSpeedPanel.js)
-         — no keyboard to use a custom keybind with on phone, so this button opens
-         it directly instead. Same gating pattern as #layout-edit-btn above. -->
+    <!-- Entry point for the GAMESPEED panel (src/ui/gameSpeedPanel.js) —
+         visible and in the same spot on both computer and phone (kept at
+         right:126px, same slot as before, rather than next to #save-btn —
+         #layout-edit-btn already occupies right:70px and stays phone-only,
+         so moving this one there would collide with it whenever both show
+         on phone). The player-assignable keybind (computer only, no
+         keyboard on phone) is a separate shortcut that toggles custom speed
+         on/off directly without opening this panel — this button is still
+         how you open it to adjust the rate or rebind that key. Only
+         draggable/resizable via the layout editor in phone mode
+         (ui/layoutEditor.js's edit mode has no computer equivalent), same
+         as #dpad/#arena/#dialogue. -->
     <!-- z-index:4 — highest of the layout editor's draggable elements
          (arena:1, dpad:2, dialogue:3 in styles/responsive.css), so this
          button stays on top and clickable no matter what it's dragged over. -->

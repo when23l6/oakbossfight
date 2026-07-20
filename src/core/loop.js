@@ -35,6 +35,8 @@ import { checkPhaseChange } from '../ui/phaseSavePopup.js';
 import { isInputBlocked } from '../ui/inputBlock.js';
 import { drawOnce } from './loopDraw.js';
 import { getGameSpeed } from '../state/gameSpeed.js';
+import { updatePlayerHitFlash } from '../boss/render/playerRender.js';
+import { tickTimers } from './tickTimer.js';
 
 function updateOnce(){
   S.tick++;
@@ -54,6 +56,14 @@ function updateOnce(){
   }
   S._prevTurn=S.turn;
   if(S.pSilentFlash>0) S.pSilentFlash--;
+  updatePlayerHitFlash();
+  if(S.bossHitFlash>0) S.bossHitFlash--;
+  if(S.bossHealFlash>0) S.bossHealFlash--;
+  // Same pause condition as the rest of active simulation below — an
+  // attack windup or the taunt counterattack delay (core/tickTimer.js)
+  // shouldn't keep counting down underneath an open popup any more than
+  // the attack itself would.
+  if(!isInputBlocked()) tickTimers();
   // Pause the entire real-time simulation below (attack movement, hazard
   // timers, damage checks) while a popup is open — not just player input.
   // A phase transition can call bossAttack() to start a brand-new attack
@@ -249,8 +259,15 @@ function updateOnce(){
 // the default branch below, there's no Math.max(1, ...) forcing at least
 // one tick per rendered frame, so a high render fps no longer means a
 // faster game once a custom rate is active.
+//
+// MAX_STEPS_PER_FRAME has to be high enough to actually REACH the custom
+// rate, not just float below it — at MAX_RATE=120 (state/gameSpeed.js),
+// each tick is ~8.3ms, so keeping up through anything short of a real
+// stall (render fps down to ~8) needs on the order of 15 catch-up ticks in
+// a single rAF callback, not 6. Too low a cap here silently throttles
+// "120" down to whatever (cap * actual render fps) works out to.
 const STEP_MS = 1000 / 15;
-const MAX_STEPS_PER_FRAME = 6;
+const MAX_STEPS_PER_FRAME = 20;
 let _lastTime = null;
 let _accumulator = 0;
 

@@ -121,8 +121,10 @@ export function drawCompulsion(){
     const distToZone=Math.sqrt(dxZ*dxZ+dyZ*dyZ)||1;
     const proximity=Math.max(0,1-(distToZone/(CMP_ZONE_R*5)));
 
-    // Tick glitch flash
-    if(S._cmpGlitchFlash>0) S._cmpGlitchFlash--;
+    // S._cmpGlitchFlash decrements once per tick in
+    // boss/attacks/compulsion.js's updateCompulsion(), not here — this used
+    // to decrement once per rendered frame instead, which drifted from
+    // gamespeed once ticks and frames stopped being 1:1.
 
     // STUN flash — burst when core touched
     if(S._cmpGlitchFlash>0){

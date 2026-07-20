@@ -6,6 +6,7 @@ import { ARENA_W, ARENA_H, AM } from '../state/constants.js';
 import { bossAttack } from '../boss/ai.js';
 import { makeZone } from '../boss/zones.js';
 import { isInputBlocked } from '../ui/inputBlock.js';
+import { scheduleTicks, msToTicks } from '../core/tickTimer.js';
 
 export function doAct(type){
   if(S.turn!=='player'||S.gameOver||S.actionLocked||isInputBlocked()) return;
@@ -97,7 +98,10 @@ export function doAct(type){
     else { if(p>=7) msg="Nothing more..."; else msg="Try doing it later."; }
 
     say(msg);
-    setTimeout(()=>{ bossAttack(); }, 1000);
+    // Ticks, not setTimeout — this windup is gameplay pacing, so it scales
+    // with gamespeed (core/tickTimer.js) like the attack-start delays in
+    // boss/zones.js instead of staying a fixed 1 real second regardless.
+    scheduleTicks(msToTicks(1000), ()=>{ bossAttack(); });
     return;
   }
 

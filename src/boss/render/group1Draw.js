@@ -169,9 +169,10 @@ export function drawCorSpinRapid(){
 // "── Heal orbs ──" block). Both S._healVfxTimer>0 and S.healOrbs gates
 // are kept inside the function — call unconditionally every frame.
 export function drawHealOrbs(){
-  // Heal VFX (floating "+N" text popup)
+  // Heal VFX (floating "+N" text popup). S._healVfxTimer decrements once
+  // per tick in boss/attacks/healOrbs.js's updateHealOrbs(), not here — see
+  // that file for why; this only reads the current value to size the fade.
   if(S._healVfxTimer>0){
-    S._healVfxTimer--;
     const prog=S._healVfxTimer/40;
     const floatY=S.py-20-(1-prog)*18;
     aCtx.save();

@@ -234,6 +234,7 @@ export function drawBossPhase8(tick){
   drawBossPhase8Eyes(ctx, cx, by, tick, flash, W, H, horror);
 
   drawVignette(ctx,W,H,0.10,0.80,0.78,0.55);
-  if(S.bossHitFlash>0) S.bossHitFlash--;
+  // S.bossHitFlash decrements once per tick in core/loop.js's updateOnce(),
+  // not here — see that file for why.
   if(dead) ctx.globalAlpha=1;
 }

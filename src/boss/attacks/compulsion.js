@@ -47,6 +47,10 @@ function beginCompulsion(){
 function updateCompulsion(){
   if(!S.compulsionPhase) return;
   S.compulsionTimer++;
+  // Moved here from render/possessionCompulsionDraw.js — that decremented
+  // once per rendered frame, drifting from gamespeed once ticks and frames
+  // stopped being 1:1; this runs once per tick instead.
+  if(S._cmpGlitchFlash>0) S._cmpGlitchFlash--;
 
   if(!S.gameOver){
   if(S.keys['ArrowLeft']||S.keys['a'])  S.px=Math.max(AM+9, S.px-3.2);

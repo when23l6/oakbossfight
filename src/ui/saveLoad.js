@@ -13,10 +13,9 @@ import { elBossMad } from '../core/canvasRefs.js';
 
 const SUMMARY_PHASE_COUNT = 9;
 
-// Shown/hidden alongside #save-menu, #summary-view-modal, and (imported
-// into ui/settingsMenu.js) #settings-menu — see ui/inputBlock.js for why the
-// game also needs to check these popups' .show state directly for keyboard
-// input, which the backdrop can't block.
+// Shown/hidden alongside #save-menu and #summary-view-modal — see
+// ui/inputBlock.js for why the game also needs to check these popups'
+// .show state directly for keyboard input, which the backdrop can't block.
 function setBackdrop(on){
   document.getElementById('popup-backdrop').style.display = on ? 'block' : 'none';
 }
@@ -168,7 +167,7 @@ function loadSaveCode(){
   setTimeout(()=>{ document.getElementById('save-menu').classList.remove('show'); setBackdrop(false); }, 900);
 }
 
-export { toggleSaveMenu, copySaveCode, clearSaveKey, loadSaveCode, toggleSummaryView, applyDecodedSave, setBackdrop };
+export { toggleSaveMenu, copySaveCode, clearSaveKey, loadSaveCode, toggleSummaryView, applyDecodedSave };
 
 window.toggleSaveMenu = toggleSaveMenu;
 window.copySaveCode = copySaveCode;
