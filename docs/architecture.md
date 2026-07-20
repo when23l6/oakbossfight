@@ -12,6 +12,10 @@ main file so the import path consumers use doesn't change.
 
 ```
 index.html          Markup shell + <link> to styles + <script type=module src=src/main.js>
+                    (320 lines — over the 300-line/file guideline; flagged rather than split,
+                    since a single-page no-build-step HTML entry point has no clean equivalent
+                    to JS's import/re-export for markup without adding runtime fetch()-and-inject
+                    complexity for little benefit)
 src/
   main.js            Entry point: initState() -> resetStats() -> updateHP/highlightMain/buildSub
                      ('FIGHT') -> loop(). resetStats() here wipes the key clean on every join —
@@ -33,12 +37,18 @@ src/
                      (custom D-pad/arena/dialogue position+scale overrides set via
                      ui/layoutEditor.js, persisted to localStorage separately from the save key — a
                      device/UI preference, not game progress, so CLEAR KEY and the every-join stats
-                     reset above don't touch it)
+                     reset above don't touch it), gameSpeed.js (custom simulation tick rate —
+                     {enabled, rate, keybind} — set via ui/gameSpeedPanel.js, same localStorage-
+                     separate-from-save-key treatment as phoneLayout.js; rate is clamped to
+                     MIN_RATE=15..MAX_RATE=120 in setRate() itself, not by callers)
   core/              canvasRefs.js (DOM/canvas refs), particles.js, input.js (listeners), loop.js
                      (fixed-timestep accumulator: loop(now) runs updateOnce() 1+ times per rAF
                      callback — more than once if the render-frame gap implies fps<15, capped at
                      MAX_STEPS_PER_FRAME — then draws once via loopDraw.js's drawOnce(); floors
-                     simulation at ~15 ticks/sec without changing behavior at fps>=15. Also calls
+                     simulation at ~15 ticks/sec without changing behavior at fps>=15, UNLESS
+                     state/gameSpeed.js's `enabled` flag is on, in which case that floor becomes a
+                     hard cap at the custom rate instead (no forced minimum tick per frame, so a
+                     high render fps no longer means a faster game). Also calls
                      ui/phaseSavePopup.js's checkPhaseChange() as the last thing in every tick, not
                      just once per frame — see that file for why the ordering matters), loopDraw.js
                      (drawOnce() — pure rendering, split out of loop.js to stay under 300 lines)
@@ -59,14 +69,21 @@ src/
                      layoutEditor.js needs to convert a screen-pixel drag into local movement),
                      touchControls.js (wires the on-screen d-pad to S.keys[...], phone mode only),
                      layoutEditor.js (phone-mode-only: drag-to-move + resize-handle logic for the
-                     D-pad, #arena-layout-wrap, and #dialogue-layout-wrap — dedicated wrappers around
-                     #arena-section and #dialogue, since core/loopDraw.js already writes the arena's
-                     own .style.transform every frame for gameplay VFX and ui/menu.js's say() replaces
-                     #dialogue's children wholesale on every line, either of which would otherwise
-                     fight/destroy a persistent layout transform or resize handle living directly on
-                     those elements; exports isLayoutEditActive(), checked by inputBlock.js so normal
-                     input pauses while editing, and applyPhoneLayout(), called from
-                     modeSelect.js's chooseMode()),
+                     D-pad, #gamespeed-btn, #arena-layout-wrap, and #dialogue-layout-wrap — the
+                     latter two are dedicated wrappers around #arena-section and #dialogue, since
+                     core/loopDraw.js already writes the arena's own .style.transform every frame
+                     for gameplay VFX and ui/menu.js's say() replaces #dialogue's children wholesale
+                     on every line, either of which would otherwise fight/destroy a persistent layout
+                     transform or resize handle living directly on those two elements (#dpad and
+                     #gamespeed-btn have no such conflict, so they're targeted directly); exports
+                     isLayoutEditActive(), checked by inputBlock.js so normal input pauses while
+                     editing, and applyPhoneLayout(), called from modeSelect.js's chooseMode()),
+                     gameSpeedPanel.js (GAMESPEED popup — +/- the custom tick rate, toggle it on/off,
+                     and on computer rebind which key opens the panel — own dedicated keydown
+                     listener rather than folding into core/input.js's, since isInputBlocked()
+                     already makes that whole handler bail out while this panel/rebind-capture is
+                     open; #gamespeed-btn opens it directly on phone instead, no keyboard there;
+                     exports isGameSpeedPanelOpen(), checked by inputBlock.js),
                      phaseSavePopup.js (exports checkPhaseChange(), called from core/loop.js; on any
                      S.phase change, pops up a save code reminder, and also persists that same code
                      to localStorage under saveCode.js's AUTOSAVE_KEY for autoSavePopup.js to offer
@@ -81,11 +98,12 @@ src/
                      correct secret code as a ?k= URL param; the code is stored here only as a
                      SHA-256 hash, no visible trigger anywhere), inputBlock.js
                      (isInputBlocked() — true while any of the 5 popups above is open, or while
-                     layoutEditor.js's edit mode is active; checked by input.js + touchControls.js
-                     so keyboard/D-pad can't drive the game underneath one — CSS stacking alone only
-                     blocks mouse/touch clicks). All 5 popups + #popup-backdrop (shared click-blocker
-                     for the 2 that aren't already full-screen) + the layout editor's toolbar live
-                     outside #game-wrapper, like #mode-select — see index.html comments for why.
+                     layoutEditor.js's edit mode or gameSpeedPanel.js's panel is active; checked by
+                     input.js + touchControls.js so keyboard/D-pad can't drive the game underneath
+                     one — CSS stacking alone only blocks mouse/touch clicks). All 6 popups +
+                     #popup-backdrop (shared click-blocker for the 2 that aren't already
+                     full-screen) + the layout editor's toolbar live outside #game-wrapper, like
+                     #mode-select — see index.html comments for why.
   actions/           fight.js item.js usb.js act.js mercy.js — one player action handler each
   cutscenes/         engine.js (csAdvance/csEnd) + phase2.js..phase8.js (per-phase scripts)
   boss/

@@ -1,6 +1,7 @@
 // Whether a blocking popup (SAVE menu, summary key viewer, the automatic
 // phase-save reminder, the auto-save-detected offer, the hidden dev
-// phase-jump GUI, or the phone-mode layout editor) is currently open.
+// phase-jump GUI, the phone-mode layout editor, or the gamespeed panel) is
+// currently open.
 // #popup-backdrop (index.html) already blocks mouse/touch clicks from
 // reaching the game spatially — see ui/saveLoad.js, which shows/hides it
 // alongside its two popups — but keyboard events aren't spatial and would
@@ -8,6 +9,7 @@
 // keydown/click handlers and ui/touchControls.js's D-pad handlers all
 // check this.
 import { isLayoutEditActive } from './layoutEditor.js';
+import { isGameSpeedPanelOpen } from './gameSpeedPanel.js';
 
 export function isInputBlocked(){
   return document.getElementById('save-menu').classList.contains('show')
@@ -15,5 +17,6 @@ export function isInputBlocked(){
     || document.getElementById('phase-save-popup').style.display === 'flex'
     || document.getElementById('secret-test-popup').style.display === 'flex'
     || document.getElementById('auto-save-popup').style.display === 'flex'
-    || isLayoutEditActive();
+    || isLayoutEditActive()
+    || isGameSpeedPanelOpen();
 }

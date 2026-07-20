@@ -143,10 +143,25 @@ body.phone-mode #dpad { display: grid; }
 #layout-edit-btn { display: none; }
 body.phone-mode #layout-edit-btn { display: inline-block; }
 
+/* ── GAMESPEED PANEL (src/ui/gameSpeedPanel.js) ── */
+/* #gamespeed-btn: same phone-only gating as #layout-edit-btn — computer
+   uses a player-assignable keybind instead (no persistent button there).
+   #gamespeed-keybind-row: the inverse — there's no keyboard to rebind with
+   on phone, so that row is hidden there. display:flex has to live here
+   rather than as an inline style on the element (index.html) so the
+   phone-mode override below — same specificity family, just a more
+   qualified selector — can actually win; an inline style would beat any
+   external rule regardless of selector specificity. */
+#gamespeed-btn { display: none; }
+body.phone-mode #gamespeed-btn { display: inline-block; }
+#gamespeed-keybind-row { display: flex; }
+body.phone-mode #gamespeed-keybind-row { display: none; }
+
 /* Dashed outline while draggable, so it's obvious which elements respond to
    touch once edit mode is on (toggled via JS, not a body class, since it
    only ever applies to these specific elements). */
-#dpad.layout-editing, #arena-layout-wrap.layout-editing, #dialogue-layout-wrap.layout-editing {
+#dpad.layout-editing, #arena-layout-wrap.layout-editing, #dialogue-layout-wrap.layout-editing,
+#gamespeed-btn.layout-editing {
   outline: 2px dashed #aa88cc;
   outline-offset: 4px;
 }

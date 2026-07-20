@@ -34,6 +34,7 @@ import { updatePreMeditate, updateMeditate } from '../boss/attacks/meditate.js';
 import { checkPhaseChange } from '../ui/phaseSavePopup.js';
 import { isInputBlocked } from '../ui/inputBlock.js';
 import { drawOnce } from './loopDraw.js';
+import { getGameSpeed } from '../state/gameSpeed.js';
 
 function updateOnce(){
   S.tick++;
@@ -241,9 +242,17 @@ function updateOnce(){
 // in a single rAF callback, so that a long stall (e.g. a backgrounded tab
 // waking back up) can't trigger a synchronous burst of ticks large enough
 // to itself stall the next frame (a "spiral of death").
+//
+// state/gameSpeed.js's `enabled` flag (set via ui/gameSpeedPanel.js)
+// switches this floor into a hard CAP instead: with the custom rate, a tick
+// only runs once enough real time has actually accumulated for it — unlike
+// the default branch below, there's no Math.max(1, ...) forcing at least
+// one tick per rendered frame, so a high render fps no longer means a
+// faster game once a custom rate is active.
 const STEP_MS = 1000 / 15;
 const MAX_STEPS_PER_FRAME = 6;
 let _lastTime = null;
+let _accumulator = 0;
 
 export function loop(now){
   requestAnimationFrame(loop);
@@ -251,8 +260,23 @@ export function loop(now){
   if(_lastTime === null) _lastTime = now;
   const delta = now - _lastTime;
   _lastTime = now;
-  let steps = Math.max(1, Math.floor(delta / STEP_MS));
-  if(steps > MAX_STEPS_PER_FRAME) steps = MAX_STEPS_PER_FRAME;
-  for(let i=0; i<steps; i++) updateOnce();
+
+  const gs = getGameSpeed();
+  if(gs.enabled){
+    const stepMs = 1000 / gs.rate;
+    _accumulator += delta;
+    let steps = 0;
+    while(_accumulator >= stepMs && steps < MAX_STEPS_PER_FRAME){
+      updateOnce();
+      _accumulator -= stepMs;
+      steps++;
+    }
+    if(steps === MAX_STEPS_PER_FRAME) _accumulator = 0;
+  } else {
+    _accumulator = 0; // don't let a stale buildup bias the next time custom mode turns on
+    let steps = Math.max(1, Math.floor(delta / STEP_MS));
+    if(steps > MAX_STEPS_PER_FRAME) steps = MAX_STEPS_PER_FRAME;
+    for(let i=0; i<steps; i++) updateOnce();
+  }
   drawOnce();
 }

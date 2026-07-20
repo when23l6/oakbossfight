@@ -1,16 +1,18 @@
-// Custom phone-mode layout overrides for the D-pad, arena, and dialogue box
-// (position + scale), set via the in-game layout editor (ui/layoutEditor.js)
-// and persisted to localStorage independent of the save key. This is a
-// device/UI preference, not game progress, so — unlike stats.js — it's
-// untouched by CLEAR KEY and the every-join stats reset in main.js.
+// Custom phone-mode layout overrides for the D-pad, arena, dialogue box, and
+// GAMESPEED button (position + scale), set via the in-game layout editor
+// (ui/layoutEditor.js) and persisted to localStorage independent of the
+// save key. This is a device/UI preference, not game progress, so — unlike
+// stats.js — it's untouched by CLEAR KEY and the every-join stats reset in
+// main.js.
 const STORAGE_KEY = 'ironFistBattle_phoneLayout';
-const ELEMENTS = ['dpad', 'arena', 'dialogue'];
+const ELEMENTS = ['dpad', 'arena', 'dialogue', 'gamespeedBtn'];
 
 function emptyLayout(){
   return {
-    dpad:     { x: 0, y: 0, scale: 1 },
-    arena:    { x: 0, y: 0, scale: 1 },
-    dialogue: { x: 0, y: 0, scale: 1 },
+    dpad:         { x: 0, y: 0, scale: 1 },
+    arena:        { x: 0, y: 0, scale: 1 },
+    dialogue:     { x: 0, y: 0, scale: 1 },
+    gamespeedBtn: { x: 0, y: 0, scale: 1 },
   };
 }
 

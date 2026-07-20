@@ -123,6 +123,33 @@
   <button class="test-btn" onclick="doneLayoutEdit()">DONE</button>
 </div>
 
+<!-- GAMESPEED panel (src/ui/gameSpeedPanel.js) — custom simulation tick
+     rate, opened via a player-assignable keybind (computer) or
+     #gamespeed-btn (phone). Same full-screen-outside-#game-wrapper pattern
+     as the other popups above. -->
+<div id="gamespeed-panel" style="display:none;position:fixed;inset:0;z-index:670;background:rgba(0,0,0,0.88);align-items:center;justify-content:center;">
+  <div style="background:#050010;border:2px solid #553366;padding:20px 26px;max-width:92vw;text-align:center;font-family:'VT323',monospace;">
+    <div style="font-size:18px;color:#aa88cc;letter-spacing:2px;margin-bottom:10px;">GAMESPEED</div>
+    <div style="font-size:14px;color:#ccbbdd;margin-bottom:10px;">Custom speed: <span id="gamespeed-enabled">OFF</span></div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:6px;">
+      <button class="test-btn" onclick="decRate()">−</button>
+      <span id="gamespeed-rate" style="font-size:22px;min-width:50px;display:inline-block;">30</span>
+      <button class="test-btn" onclick="incRate()">+</button>
+    </div>
+    <div style="font-size:12px;color:#998;margin-bottom:12px;">(minimum 15)</div>
+    <div style="margin-bottom:10px;">
+      <button class="test-btn" onclick="toggleGameSpeedEnabled()">TOGGLE ON/OFF</button>
+    </div>
+    <!-- Computer only — no keyboard to rebind with on phone; hidden there
+         via styles/responsive.css. -->
+    <div id="gamespeed-keybind-row" style="align-items:center;gap:8px;justify-content:center;margin-bottom:12px;font-size:13px;color:#ccbbdd;">
+      Keybind: <span id="gamespeed-keybind">(none)</span>
+      <button class="test-btn" onclick="startGameSpeedRebind()">SET</button>
+    </div>
+    <button class="test-btn" onclick="closeGameSpeedPanel()">CLOSE</button>
+  </div>
+</div>
+
 <!-- Shared backdrop for the SAVE menu + summary key viewer below — both are
      small centered .popup-modal boxes (see styles/ui.css), not full-screen,
      so without this a click outside their bounds (or any keyboard input;
@@ -155,6 +182,7 @@
   <div id="save-load-msg"></div>
 
   <div style="text-align:center;margin-top:14px;">
+    <button class="test-btn" onclick="toggleGameSpeedPanel()">GAMESPEED</button>
     <button class="test-btn" onclick="toggleSaveMenu()">CLOSE</button>
   </div>
 </div>
@@ -196,6 +224,10 @@
          Hidden by default, shown only in body.phone-mode (styles/responsive.css),
          matching how #dpad itself is gated. -->
     <button id="layout-edit-btn" onclick="toggleLayoutEdit()" style="position:absolute;top:32px;right:70px;z-index:3;font-family:'VT323',monospace;font-size:12px;background:none;border:1px solid #443344;color:#886688;padding:1px 6px;cursor:pointer;">⚙</button>
+    <!-- Phone-mode-only entry point for the GAMESPEED panel (src/ui/gameSpeedPanel.js)
+         — no keyboard to use a custom keybind with on phone, so this button opens
+         it directly instead. Same gating pattern as #layout-edit-btn above. -->
+    <button id="gamespeed-btn" onclick="toggleGameSpeedPanel()" style="position:absolute;top:32px;right:126px;z-index:3;font-family:'VT323',monospace;font-size:12px;background:none;border:1px solid #443344;color:#886688;padding:1px 6px;cursor:pointer;">⏱<div class="resize-handle" id="gamespeed-btn-resize-handle" style="display:none;">⤡</div></button>
     <div id="boss-name-area">
       <div id="boss-mad" style="display:none;font-family:'VT323',monospace;font-size:13px;color:#fff;letter-spacing:2px;margin-bottom:2px;">!!! MAD !!!</div>
       <div id="boss-name">Professor Oak</div>

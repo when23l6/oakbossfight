@@ -17,6 +17,7 @@ import './core/input.js';
 import './ui/saveLoad.js';
 import './ui/autoSavePopup.js';
 import './ui/layoutEditor.js';
+import './ui/gameSpeedPanel.js';
 import './ui/modeSelect.js';
 import './ui/touchControls.js';
 import './ui/secretTestGui.js';

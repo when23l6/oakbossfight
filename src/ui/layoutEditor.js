@@ -1,8 +1,8 @@
 // Phone-mode layout editor: lets the player drag-reposition and resize the
-// D-pad, arena, and dialogue box to their liking. Settings persist to
-// localStorage (state/phoneLayout.js) independent of the save key — this is
-// a device/UI preference, not game progress, so it isn't touched by CLEAR
-// KEY or the every-join stats reset (main.js).
+// D-pad, arena, dialogue box, and GAMESPEED button to their liking. Settings
+// persist to localStorage (state/phoneLayout.js) independent of the save
+// key — this is a device/UI preference, not game progress, so it isn't
+// touched by CLEAR KEY or the every-join stats reset (main.js).
 //
 // The arena's own #arena-section has its .style.transform written every
 // frame by core/loopDraw.js (slash-rotate, screenshake, quad rotation —
@@ -11,18 +11,24 @@
 // would silently delete a resize handle living inside it as a child) — so
 // this editor can't target either element directly. index.html wraps both
 // in a dedicated #arena-layout-wrap / #dialogue-layout-wrap that ONLY this
-// module ever touches. #dpad has no such conflict (nothing else sets its
-// transform or replaces its children), so it's targeted directly.
+// module ever touches. #dpad and #gamespeed-btn have no such conflict
+// (nothing else sets their transform or replaces their children), so
+// they're targeted directly — #gamespeed-btn's own resize handle just lives
+// inside the <button> itself; makeResizable()'s preventDefault() on
+// touchstart already suppresses the synthetic click that would otherwise
+// also fire the button's onclick from the same touch.
 import { getLayout, setElementLayout, resetLayout } from '../state/phoneLayout.js';
 import { getPhoneScale } from './modeSelect.js';
 
 const dpad = document.getElementById('dpad');
 const arenaWrap = document.getElementById('arena-layout-wrap');
 const dialogueWrap = document.getElementById('dialogue-layout-wrap');
+const gamespeedBtn = document.getElementById('gamespeed-btn');
 const editBar = document.getElementById('layout-edit-bar');
 const dpadHandle = document.getElementById('dpad-resize-handle');
 const arenaHandle = document.getElementById('arena-resize-handle');
 const dialogueHandle = document.getElementById('dialogue-resize-handle');
+const gamespeedBtnHandle = document.getElementById('gamespeed-btn-resize-handle');
 
 const MIN_SCALE = 0.5, MAX_SCALE = 1.8;
 function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
@@ -45,6 +51,7 @@ export function applyPhoneLayout(){
   applyToElement(dpad, l.dpad);
   applyToElement(arenaWrap, l.arena);
   applyToElement(dialogueWrap, l.dialogue);
+  applyToElement(gamespeedBtn, l.gamespeedBtn);
 }
 
 function setEditActive(on){
@@ -53,9 +60,11 @@ function setEditActive(on){
   dpadHandle.style.display = on ? 'flex' : 'none';
   arenaHandle.style.display = on ? 'flex' : 'none';
   dialogueHandle.style.display = on ? 'flex' : 'none';
+  gamespeedBtnHandle.style.display = on ? 'flex' : 'none';
   dpad.classList.toggle('layout-editing', on);
   arenaWrap.classList.toggle('layout-editing', on);
   dialogueWrap.classList.toggle('layout-editing', on);
+  gamespeedBtn.classList.toggle('layout-editing', on);
 }
 
 function toggleLayoutEdit(){
@@ -146,9 +155,11 @@ function makeResizable(handle, el, key){
 makeDraggable(dpad, 'dpad');
 makeDraggable(arenaWrap, 'arena');
 makeDraggable(dialogueWrap, 'dialogue');
+makeDraggable(gamespeedBtn, 'gamespeedBtn');
 makeResizable(dpadHandle, dpad, 'dpad');
 makeResizable(arenaHandle, arenaWrap, 'arena');
 makeResizable(dialogueHandle, dialogueWrap, 'dialogue');
+makeResizable(gamespeedBtnHandle, gamespeedBtn, 'gamespeedBtn');
 
 export { toggleLayoutEdit, doneLayoutEdit, resetLayoutEdit };
 window.toggleLayoutEdit = toggleLayoutEdit;
