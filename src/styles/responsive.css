@@ -84,11 +84,17 @@ body.phone-mode #boss-section { height: 200px; }
   align-items: center;
   gap: 10px;
 }
-#arena-row #arena-section { grid-column: 2; justify-self: center; }
+/* #arena-layout-wrap (not #arena-section directly) is the grid item — see
+   index.html's comment on that wrapper for why the layout editor's custom
+   transform can't share an element with core/loopDraw.js's per-frame
+   gameplay transform. */
+#arena-row #arena-layout-wrap { grid-column: 2; justify-self: center; }
 #arena-row #dpad { justify-self: start; }
+#arena-layout-wrap { position: relative; }
 
 #dpad {
   display: none;
+  position: relative;
   grid-template-columns: 42px 42px 42px;
   grid-template-rows: 42px 42px 42px;
   /* Full 3x3 — 8 direction buttons around an empty center (no button there,
@@ -127,3 +133,30 @@ body.phone-mode #dpad { display: grid; }
 
 /* ── MODE SELECT GATE ── */
 #mode-select button:hover { background: rgba(255,255,255,0.08); }
+
+/* ── PHONE LAYOUT EDITOR (src/ui/layoutEditor.js) ── */
+/* Same display:none/phone-mode-only gating as #dpad above. */
+#layout-edit-btn { display: none; }
+body.phone-mode #layout-edit-btn { display: inline-block; }
+
+/* Dashed outline while draggable, so it's obvious which two elements
+   respond to touch once edit mode is on (toggled via JS, not a body class,
+   since it only ever applies to these two specific elements). */
+#dpad.layout-editing, #arena-layout-wrap.layout-editing {
+  outline: 2px dashed #aa88cc;
+  outline-offset: 4px;
+}
+
+.resize-handle {
+  display: none;
+  position: absolute;
+  bottom: -10px; right: -10px;
+  width: 22px; height: 22px;
+  align-items: center; justify-content: center;
+  background: #aa88cc; color: #050010;
+  border-radius: 50%;
+  font-size: 13px; line-height: 1;
+  /* Own drag gesture, not a press/scroll — see ui/layoutEditor.js. */
+  touch-action: none;
+  z-index: 1;
+}

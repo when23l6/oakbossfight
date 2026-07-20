@@ -57,6 +57,15 @@ function updateTouch(touch){
   // that key on release, or it'd stay stuck true forever.
   if(isInputBlocked()) return;
   const newKeys = keysAt(touch.clientX, touch.clientY);
+  // A fast drag across the pad (swapping direction quickly mid-dodge) can
+  // easily sample a touchmove point that's momentarily in the 4px gap
+  // between buttons, or just off the pad's edge — elementFromPoint finds
+  // nothing there, so newKeys comes back empty. Treating that as "released"
+  // dropped movement for a frame on every such sample, which is exactly
+  // what a quick direction change does repeatedly. Only a real
+  // touchend/touchcancel (releaseTouch(), below) should actually clear
+  // keys — an empty sample here just means "keep whatever was last held".
+  if(newKeys.length === 0) return;
   const oldKeys = touchKeys.get(touch.identifier) || [];
   for(const k of oldKeys) if(!newKeys.includes(k)) removeKeyPress(k);
   for(const k of newKeys) if(!oldKeys.includes(k)) addKeyPress(k);

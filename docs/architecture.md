@@ -29,7 +29,11 @@ src/
                      right after initState() on every join instead, so the key always starts clean;
                      the only way old stats come back is loading a code), saveCode.js
                      (encode/decode the portable save-code + summary-key strings; save code
-                     silently carries usedTestGui + madMode + per-phase death counts)
+                     silently carries usedTestGui + madMode + per-phase death counts), phoneLayout.js
+                     (custom D-pad/arena position+scale overrides set via ui/layoutEditor.js,
+                     persisted to localStorage separately from the save key — a device/UI
+                     preference, not game progress, so CLEAR KEY and the every-join stats reset
+                     above don't touch it)
   core/              canvasRefs.js (DOM/canvas refs), particles.js, input.js (listeners), loop.js
                      (fixed-timestep accumulator: loop(now) runs updateOnce() 1+ times per rAF
                      callback — more than once if the render-frame gap implies fps<15, capped at
@@ -49,8 +53,18 @@ src/
                      saveLoad.js, secretTestGui.js, and CLEAR KEY), modeSelect.js (Computer/Phone
                      gate, shown every page load; chooseMode() also calls autoSavePopup.js's
                      checkAutoSave() right after hiding the gate — not run any earlier, since the
-                     gate's z-index sits above every popup and would hide it until dismissed),
+                     gate's z-index sits above every popup and would hide it until dismissed; also
+                     calls layoutEditor.js's applyPhoneLayout() when phone mode is chosen; exports
+                     getPhoneScale(), the last #game-wrapper fit-to-screen scale, which
+                     layoutEditor.js needs to convert a screen-pixel drag into local movement),
                      touchControls.js (wires the on-screen d-pad to S.keys[...], phone mode only),
+                     layoutEditor.js (phone-mode-only: drag-to-move + resize-handle logic for the
+                     D-pad and #arena-layout-wrap — a dedicated wrapper around #arena-section, since
+                     core/loopDraw.js already writes that element's own .style.transform every frame
+                     for gameplay VFX and would otherwise fight a persistent layout transform on the
+                     same element; exports isLayoutEditActive(), checked by inputBlock.js so normal
+                     input pauses while editing, and applyPhoneLayout(), called from
+                     modeSelect.js's chooseMode()),
                      phaseSavePopup.js (exports checkPhaseChange(), called from core/loop.js; on any
                      S.phase change, pops up a save code reminder, and also persists that same code
                      to localStorage under saveCode.js's AUTOSAVE_KEY for autoSavePopup.js to offer
@@ -64,12 +78,12 @@ src/
                      corridor-chain attack picker, unlocked only by loading the page with the
                      correct secret code as a ?k= URL param; the code is stored here only as a
                      SHA-256 hash, no visible trigger anywhere), inputBlock.js
-                     (isInputBlocked() — true while any of the 5 popups above is open; checked by
-                     input.js + touchControls.js so keyboard/D-pad can't drive the game underneath
-                     one — CSS stacking alone only blocks mouse/touch clicks). All 5 popups +
-                     #popup-backdrop (shared click-blocker for the 2 that aren't already
-                     full-screen) live outside #game-wrapper, like #mode-select — see index.html
-                     comments for why.
+                     (isInputBlocked() — true while any of the 5 popups above is open, or while
+                     layoutEditor.js's edit mode is active; checked by input.js + touchControls.js
+                     so keyboard/D-pad can't drive the game underneath one — CSS stacking alone only
+                     blocks mouse/touch clicks). All 5 popups + #popup-backdrop (shared click-blocker
+                     for the 2 that aren't already full-screen) + the layout editor's toolbar live
+                     outside #game-wrapper, like #mode-select — see index.html comments for why.
   actions/           fight.js item.js usb.js act.js mercy.js — one player action handler each
   cutscenes/         engine.js (csAdvance/csEnd) + phase2.js..phase8.js (per-phase scripts)
   boss/

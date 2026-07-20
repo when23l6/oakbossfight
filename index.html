@@ -112,6 +112,17 @@
   </div>
 </div>
 
+<!-- Phone-mode layout editor toolbar (src/ui/layoutEditor.js) — a slim top
+     banner, not a full-screen popup like the others, since the whole point
+     is to see and touch the D-pad/arena underneath while it's open. Outside
+     #game-wrapper for the same position:fixed-containment reason as every
+     other overlay here. -->
+<div id="layout-edit-bar" style="display:none;position:fixed;top:0;left:0;right:0;z-index:660;background:rgba(5,0,16,0.92);border-bottom:2px solid #553366;align-items:center;justify-content:center;gap:10px;padding:8px;font-family:'VT323',monospace;font-size:13px;color:#ccbbdd;letter-spacing:1px;flex-wrap:wrap;">
+  <span>Drag to move · drag ⤡ to resize</span>
+  <button class="test-btn" onclick="resetLayoutEdit()">RESET</button>
+  <button class="test-btn" onclick="doneLayoutEdit()">DONE</button>
+</div>
+
 <!-- Shared backdrop for the SAVE menu + summary key viewer below — both are
      small centered .popup-modal boxes (see styles/ui.css), not full-screen,
      so without this a click outside their bounds (or any keyboard input;
@@ -180,6 +191,11 @@
     <div id="boss-bg"></div>
     <div id="stats-readout">TIME 0:00 · DEATHS 0</div>
     <button id="save-btn" onclick="toggleSaveMenu()" style="position:absolute;top:32px;right:14px;z-index:3;font-family:'VT323',monospace;font-size:12px;background:none;border:1px solid #443344;color:#886688;padding:1px 8px;cursor:pointer;letter-spacing:1px;">SAVE ▾</button>
+    <!-- Phone-mode-only layout editor entry point — lets the player drag-
+         reposition and resize the D-pad and arena (src/ui/layoutEditor.js).
+         Hidden by default, shown only in body.phone-mode (styles/responsive.css),
+         matching how #dpad itself is gated. -->
+    <button id="layout-edit-btn" onclick="toggleLayoutEdit()" style="position:absolute;top:32px;right:70px;z-index:3;font-family:'VT323',monospace;font-size:12px;background:none;border:1px solid #443344;color:#886688;padding:1px 6px;cursor:pointer;">⚙</button>
     <div id="boss-name-area">
       <div id="boss-mad" style="display:none;font-family:'VT323',monospace;font-size:13px;color:#fff;letter-spacing:2px;margin-bottom:2px;">!!! MAD !!!</div>
       <div id="boss-name">Professor Oak</div>
@@ -214,9 +230,20 @@
         <button class="dpad-btn dpad-corner" data-keys="ArrowDown,ArrowLeft"  style="grid-area:downleft;">↙</button>
         <button class="dpad-btn"             data-keys="ArrowDown"            style="grid-area:down;">▼</button>
         <button class="dpad-btn dpad-corner" data-keys="ArrowDown,ArrowRight" style="grid-area:downright;">↘</button>
+        <div class="resize-handle" id="dpad-resize-handle" style="display:none;">⤡</div>
       </div>
-      <div id="arena-section">
-        <canvas id="arena-canvas" width="240" height="200"></canvas>
+      <!-- Wraps #arena-section rather than applying the layout editor's
+           custom transform directly to it — core/loopDraw.js already writes
+           #arena-section's own .style.transform every frame for gameplay
+           VFX (slash-rotate, screenshake, quad rotation), which would
+           otherwise clobber a persistent position/scale transform (and vice
+           versa). This wrapper is the only thing src/ui/layoutEditor.js
+           ever touches. -->
+      <div id="arena-layout-wrap">
+        <div id="arena-section">
+          <canvas id="arena-canvas" width="240" height="200"></canvas>
+        </div>
+        <div class="resize-handle" id="arena-resize-handle" style="display:none;">⤡</div>
       </div>
     </div>
 

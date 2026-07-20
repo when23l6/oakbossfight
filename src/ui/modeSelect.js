@@ -5,10 +5,19 @@
 // actual game/attack logic needs to know which mode is active.
 import { elMenu } from '../core/canvasRefs.js';
 import { checkAutoSave } from './autoSavePopup.js';
+import { applyPhoneLayout } from './layoutEditor.js';
 
 const gameWrapper = document.getElementById('game-wrapper');
 const subActions = document.getElementById('sub-actions');
 const dialogue = document.getElementById('dialogue');
+
+// Last scale factor applied by fitPhoneLayoutNow() below — ui/layoutEditor.js
+// needs this to convert a screen-pixel drag into the right amount of local
+// movement for an element sitting inside #game-wrapper's own scale(); a
+// finger moving 100 screen px should move a 0.5-scaled element 200 of its
+// own local px to actually track the finger 1:1 visually.
+let currentScale = 1;
+export function getPhoneScale(){ return currentScale; }
 
 function applyMode(mode){
   document.body.classList.remove('computer-mode', 'phone-mode');
@@ -30,6 +39,7 @@ function fitPhoneLayoutNow(){
   const vw = vv ? vv.width : window.innerWidth;
   const vh = vv ? vv.height : window.innerHeight;
   const scale = Math.min(vw / rect.width, vh / rect.height, 1);
+  currentScale = scale;
   gameWrapper.style.transform = scale < 1 ? `scale(${scale})` : 'none';
 }
 
@@ -50,6 +60,10 @@ function chooseMode(mode){
   // ui/autoSavePopup.js's top comment for why checkAutoSave() lives here
   // instead of running itself at module load time.
   checkAutoSave();
+  // Only meaningful in phone mode (the D-pad doesn't exist in computer
+  // mode, and the arena should keep its normal untouched layout there) —
+  // applyPhoneLayout() itself doesn't check the mode, so gate it here.
+  if(mode === 'phone') applyPhoneLayout();
 }
 
 document.getElementById('mode-select').style.display = 'flex';
