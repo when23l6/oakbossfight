@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Researcher - Boss Battle</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="src/styles/base.css">
+<link rel="stylesheet" href="src/styles/ui.css">
+<link rel="stylesheet" href="src/styles/responsive.css">
+</head>
+<body>
+
+<!-- Mode-select gate: shown before anything else until Computer or Phone is chosen -->
+<div id="mode-select" style="display:none;position:fixed;inset:0;background:#000;z-index:1000;flex-direction:column;align-items:center;justify-content:center;gap:26px;">
+  <div style="font-family:'VT323',monospace;font-size:26px;letter-spacing:3px;color:#fff;text-align:center;padding:0 20px;">HOW ARE YOU PLAYING?</div>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center;">
+    <button onclick="chooseMode('computer')" style="font-family:'VT323',monospace;font-size:20px;background:none;border:2px solid #886688;color:#ddccee;padding:14px 30px;cursor:pointer;letter-spacing:2px;">COMPUTER</button>
+    <button onclick="chooseMode('phone')" style="font-family:'VT323',monospace;font-size:20px;background:none;border:2px solid #886688;color:#ddccee;padding:14px 30px;cursor:pointer;letter-spacing:2px;">PHONE</button>
+  </div>
+</div>
+
+<!-- Phase-transition save-code reminder: shown automatically whenever S.phase
+     changes (see src/ui/phaseSavePopup.js). Sits outside #game-wrapper, like
+     the mode-select gate, so it always covers the true viewport as a
+     full-screen backdrop rather than being scaled down with everything
+     else in phone mode — and so it can't be clicked through to whatever
+     cutscene/gameplay is starting underneath. -->
+<div id="phase-save-popup" style="display:none;position:fixed;inset:0;z-index:600;background:rgba(0,0,0,0.88);align-items:center;justify-content:center;">
+  <div style="background:#050010;border:2px solid #553366;padding:20px 26px;max-width:92vw;text-align:center;font-family:'VT323',monospace;">
+    <div style="font-size:18px;color:#aa88cc;letter-spacing:2px;margin-bottom:10px;">Use this to save your progress:</div>
+    <input id="phase-save-code" class="save-input" type="text" readonly onclick="this.select()" style="width:min(80vw,320px);">
+    <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;">
+      <button class="test-btn" onclick="copyPhaseSaveCode()">COPY</button>
+      <button class="test-btn" onclick="closePhaseSavePopup()">CLOSE</button>
+    </div>
+    <div id="phase-save-msg" style="font-size:13px;margin-top:8px;min-height:16px;"></div>
+  </div>
+</div>
+
+<!-- Hidden dev phase-jump GUI — no visible trigger anywhere; opened only by
+     loading this page with the correct secret code as a ?k= URL param (see
+     src/ui/secretTestGui.js — the code itself is only stored here as a
+     SHA-256 hash, never in plaintext). Same full-screen-backdrop-outside-
+     #game-wrapper pattern as #phase-save-popup above, for the same reasons. -->
+<div id="secret-test-popup" style="display:none;position:fixed;inset:0;z-index:700;background:rgba(0,0,0,0.92);align-items:center;justify-content:center;">
+  <div style="background:#050010;border:2px solid #553366;padding:20px 26px;max-width:92vw;max-height:85vh;overflow-y:auto;text-align:center;font-family:'VT323',monospace;">
+    <div style="font-size:18px;color:#aa88cc;letter-spacing:2px;margin-bottom:12px;">JUMP TO PHASE</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:280px;margin:0 auto;">
+      <button class="test-btn" onclick="secretJumpToPhase(1)">1</button>
+      <button class="test-btn" onclick="secretJumpToPhase(2)">2</button>
+      <button class="test-btn" onclick="secretJumpToPhase(3)">3</button>
+      <button class="test-btn" onclick="secretJumpToPhase(4)">4</button>
+      <button class="test-btn" onclick="secretJumpToPhase(5)">5</button>
+      <button class="test-btn" onclick="secretJumpToPhase(6)">6</button>
+      <button class="test-btn" onclick="secretJumpToPhase(7)">7</button>
+      <button class="test-btn" onclick="secretJumpToPhase(8)">8</button>
+      <button class="test-btn" onclick="secretJumpToPhase(9)">9</button>
+    </div>
+
+    <div style="font-size:18px;color:#aa88cc;letter-spacing:2px;margin:16px 0 12px;">P8 ATTACKS</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;max-width:320px;margin:0 auto;">
+      <button class="test-btn" onclick="secretTestP8Attack('corridor')">CORRIDOR</button>
+      <button class="test-btn" onclick="secretTestP8Attack('corMultiRic')">MULTI RIC</button>
+      <button class="test-btn" onclick="secretTestP8Attack('corBlocks')">BLOCKS</button>
+      <button class="test-btn" onclick="secretTestP8Attack('corRifleGrenade')">RIFLE+GRENADE</button>
+      <button class="test-btn" onclick="secretTestP8Attack('corSpinRapid')">SPIN RAPID</button>
+      <button class="test-btn" onclick="secretTestP8Attack('corStompSwipe')">STOMP SWIPE</button>
+      <button class="test-btn" onclick="secretTestP8Attack('blindchase')">BLINDCHASE</button>
+      <button class="test-btn" onclick="secretTestP8Attack('compulsion')">COMPULSION</button>
+      <button class="test-btn" onclick="secretTestP8Attack('healOrbs')">HEAL ORBS</button>
+      <button class="test-btn" onclick="secretTestP8Attack('corQuad')">QUAD</button>
+      <button class="test-btn" onclick="secretTestP8Attack('cor10')">COR10</button>
+      <button class="test-btn" onclick="secretTestP8Attack('corMRS')">CORMRS</button>
+      <button class="test-btn" onclick="secretTestP8Attack('meditate')">MEDITATE</button>
+    </div>
+
+    <div style="margin-top:16px;">
+      <button class="test-btn" onclick="closeSecretTestGui()">CLOSE</button>
+    </div>
+  </div>
+</div>
+
+<!-- Auto-save offer: shown once at page load if a save code was persisted
+     to localStorage during a previous session (see src/ui/autoSavePopup.js
+     — written by src/ui/phaseSavePopup.js's showPhaseSavePopup() every time
+     a phase-save code is generated). The stored code is deleted from
+     localStorage the instant this is shown, regardless of what the player
+     does with it next — COPY/LOAD/CLOSE all just use the in-memory copy of
+     the code from before it was deleted. Same full-screen-backdrop-outside-
+     #game-wrapper pattern as #phase-save-popup above, for the same reasons.
+     z-index sits between #phase-save-popup (600) and #secret-test-popup
+     (700) — in practice they're never visible simultaneously since this one
+     only ever shows once at page load, before any phase change has
+     happened, but kept sane anyway. -->
+<div id="auto-save-popup" style="display:none;position:fixed;inset:0;z-index:650;background:rgba(0,0,0,0.88);align-items:center;justify-content:center;">
+  <div style="background:#050010;border:2px solid #553366;padding:20px 26px;max-width:92vw;text-align:center;font-family:'VT323',monospace;">
+    <div style="font-size:18px;color:#aa88cc;letter-spacing:2px;margin-bottom:10px;">Auto save detected:</div>
+    <input id="auto-save-code" class="save-input" type="text" readonly onclick="this.select()" style="width:min(80vw,320px);">
+    <div style="margin-top:10px;font-size:14px;color:#ccbbdd;text-align:left;display:inline-block;">
+      <div>Phase: <span id="auto-save-phase">-</span></div>
+      <div>Items: <span id="auto-save-items">-</span></div>
+      <div>Deaths: <span id="auto-save-deaths">-</span></div>
+      <div>Time: <span id="auto-save-time">-</span></div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;">
+      <button class="test-btn" onclick="copyAutoSaveCode()">COPY</button>
+      <button class="test-btn" onclick="loadAutoSave()">LOAD</button>
+      <button class="test-btn" onclick="closeAutoSavePopup()">CLOSE</button>
+    </div>
+    <div id="auto-save-msg" style="font-size:13px;margin-top:8px;min-height:16px;"></div>
+  </div>
+</div>
+
+<!-- Shared backdrop for the SAVE menu + summary key viewer below — both are
+     small centered .popup-modal boxes (see styles/ui.css), not full-screen,
+     so without this a click outside their bounds (or any keyboard input;
+     see src/ui/inputBlock.js) would still reach the game underneath.
+     Shown/hidden by src/ui/saveLoad.js alongside those two popups. -->
+<div id="popup-backdrop" style="display:none;position:fixed;inset:0;z-index:290;background:rgba(0,0,0,0.6);"></div>
+
+<!-- Save / Load: portable code encoding phase, items, deaths, play time.
+     Moved outside #game-wrapper (like the mode-select gate and
+     phase-save-popup above) — position:fixed inside a transformed ancestor
+     (ui/modeSelect.js scales #game-wrapper on phone) is contained by that
+     ancestor instead of the true viewport, per the CSS spec, so this needs
+     to sit outside it to behave as a real fixed, centered overlay. -->
+<div id="save-menu" class="popup-modal">
+  <div style="font-family:'VT323',monospace;font-size:20px;color:#aa88cc;letter-spacing:3px;margin-bottom:6px;text-align:center;">── SAVE / LOAD ──</div>
+
+  <h3>Your Save Code</h3>
+  <input id="save-code-output" class="save-input" type="text" readonly onclick="this.select()">
+  <div style="text-align:right;margin-top:6px;">
+    <button class="test-btn" onclick="copySaveCode()">COPY</button>
+    <button class="test-btn" onclick="clearSaveKey()">CLEAR KEY</button>
+  </div>
+
+  <h3>Load a Code</h3>
+  <input id="save-code-input" class="save-input" type="text" placeholder="Paste your code here">
+  <div style="text-align:right;margin-top:6px;">
+    <button class="test-btn" onclick="loadSaveCode()">LOAD</button>
+  </div>
+
+  <div id="save-load-msg"></div>
+
+  <div style="text-align:center;margin-top:14px;">
+    <button class="test-btn" onclick="toggleSaveMenu()">CLOSE</button>
+  </div>
+</div>
+
+<!-- Summary key view: read-only stats snapshot decoded from a summary key
+     (see src/state/saveCode.js decodeSummaryKey). Never touches game state. -->
+<div id="summary-view-modal" class="popup-modal">
+  <div style="font-family:'VT323',monospace;font-size:20px;color:#aa88cc;letter-spacing:3px;margin-bottom:6px;text-align:center;">── SUMMARY KEY ──</div>
+
+  <h3>Phase Times</h3>
+  <div style="display:flex;justify-content:space-between;"><span>Phase 1</span><span id="summary-phase-1">0:00</span></div>
+  <div style="display:flex;justify-content:space-between;"><span>Phase 2</span><span id="summary-phase-2">0:00</span></div>
+  <div style="display:flex;justify-content:space-between;"><span>Phase 3</span><span id="summary-phase-3">0:00</span></div>
+  <div style="display:flex;justify-content:space-between;"><span>Phase 4</span><span id="summary-phase-4">0:00</span></div>
+  <div style="display:flex;justify-content:space-between;"><span>Phase 5</span><span id="summary-phase-5">0:00</span></div>
+  <div style="display:flex;justify-content:space-between;"><span>Phase 6</span><span id="summary-phase-6">0:00</span></div>
+  <div style="display:flex;justify-content:space-between;"><span>Phase 7</span><span id="summary-phase-7">0:00</span></div>
+  <div style="display:flex;justify-content:space-between;"><span>Phase 8</span><span id="summary-phase-8">0:00</span></div>
+  <div style="display:flex;justify-content:space-between;"><span>Phase 9</span><span id="summary-phase-9">0:00</span></div>
+
+  <h3>Totals</h3>
+  <div style="display:flex;justify-content:space-between;"><span>Total Time</span><span id="summary-total-time">0:00</span></div>
+  <div style="display:flex;justify-content:space-between;"><span>Deaths</span><span id="summary-deaths">0</span></div>
+
+  <div style="text-align:center;margin-top:14px;">
+    <button class="test-btn" onclick="toggleSummaryView()">CLOSE</button>
+  </div>
+</div>
+
+<div id="game-wrapper">
+
+  <!-- BOSS -->
+  <div id="boss-section">
+    <div id="boss-bg"></div>
+    <div id="stats-readout">TIME 0:00 · DEATHS 0</div>
+    <button id="save-btn" onclick="toggleSaveMenu()" style="position:absolute;top:32px;right:14px;z-index:3;font-family:'VT323',monospace;font-size:12px;background:none;border:1px solid #443344;color:#886688;padding:1px 8px;cursor:pointer;letter-spacing:1px;">SAVE ▾</button>
+    <div id="boss-name-area">
+      <div id="boss-mad" style="display:none;font-family:'VT323',monospace;font-size:13px;color:#fff;letter-spacing:2px;margin-bottom:2px;">!!! MAD !!!</div>
+      <div id="boss-name">Professor Oak</div>
+    </div>
+    <canvas id="boss-canvas" width="420" height="300"></canvas>
+    <div id="boss-hp-row">
+      <span id="boss-hp-text">300 / 300</span>
+      <div id="boss-hp-outer"><div id="boss-hp-bar"></div></div>
+    </div>
+  </div>
+
+  <!-- BATTLE BOX -->
+  <div id="battle-box" style="position:relative;">
+    <canvas id="particle-canvas" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:0;transition:opacity 0.8s;"></canvas>
+
+    <!-- Dialogue -->
+    <div id="speaker-label" style="font-family:'VT323',monospace;font-size:16px;letter-spacing:2px;color:#888;min-height:18px;margin-bottom:2px;display:none;"></div>
+    <div id="dialogue">The greed of yours has turned the card againest you.</div>
+    <div id="cs-skip" onclick="csAdvance()" style="display:none;font-family:'VT323',monospace;font-size:16px;color:#555;cursor:pointer;letter-spacing:1px;user-select:none;margin-top:4px;">▶ click to continue</div>
+
+    <!-- Arena (centered, like Undertale), flanked by a phone-mode D-pad in
+         the natural side margin — so it scales and repositions together
+         with the rest of the layout and never sits over the arena itself
+         or the action menu below. -->
+    <div id="arena-row">
+      <div id="dpad">
+        <button class="dpad-btn dpad-corner" data-keys="ArrowUp,ArrowLeft"    style="grid-area:upleft;">↖</button>
+        <button class="dpad-btn"             data-keys="ArrowUp"              style="grid-area:up;">▲</button>
+        <button class="dpad-btn dpad-corner" data-keys="ArrowUp,ArrowRight"   style="grid-area:upright;">↗</button>
+        <button class="dpad-btn"             data-keys="ArrowLeft"            style="grid-area:left;">◀</button>
+        <button class="dpad-btn"             data-keys="ArrowRight"           style="grid-area:right;">▶</button>
+        <button class="dpad-btn dpad-corner" data-keys="ArrowDown,ArrowLeft"  style="grid-area:downleft;">↙</button>
+        <button class="dpad-btn"             data-keys="ArrowDown"            style="grid-area:down;">▼</button>
+        <button class="dpad-btn dpad-corner" data-keys="ArrowDown,ArrowRight" style="grid-area:downright;">↘</button>
+      </div>
+      <div id="arena-section">
+        <canvas id="arena-canvas" width="240" height="200"></canvas>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div id="stats-row">
+      <span>LV 5</span>
+      <span>HP</span>
+      <div id="player-hp-outer"><div id="player-hp-bar"></div></div>
+      <span id="hp-text">20/20</span>
+    </div>
+    <div id="meditate-text" style="display:none;font-family:'VT323',monospace;font-size:22px;color:#ffff44;padding:2px 8px;">* Meditate &nbsp;<span id="meditate-hint" style="font-size:16px;color:#ffff44;opacity:0.8;">&lt;-- Spam Click / Space / Enter / Z</span></div>
+
+    <!-- Action menu -->
+    <div id="menu-area">
+      <div id="actions">
+        <button class="act-btn" data-action="FIGHT" onclick="selectAction('FIGHT')">FIGHT</button>
+        <button class="act-btn" data-action="ACT"   onclick="selectAction('ACT')">ACT</button>
+        <button class="act-btn" data-action="ITEM"  onclick="selectAction('ITEM')">ITEM</button>
+        <button class="act-btn" data-action="MERCY" onclick="selectAction('MERCY')">MERCY</button>
+      </div>
+      <div id="sub-actions"></div>
+    </div>
+
+  </div>
+</div>
+
+<div id="overlay">
+  <div id="overlay-title"></div>
+  <div id="overlay-sub"></div>
+  <button id="overlay-btn" onclick="resetGame()">PLAY AGAIN</button>
+</div>
+
+<script type="module" src="src/main.js"></script>
+</body>
+</html>

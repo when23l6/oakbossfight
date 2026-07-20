@@ -1,0 +1,114 @@
+/* Extracted verbatim from "iron_fist_battle_v8 (2).html" <style> block:
+   battle box + keyframe animations (lines 60-81), dialogue (lines 83-88),
+   action menu / sub-actions buttons (lines 109-142), overlay (lines 144-158). */
+
+/* ── BATTLE BOX ── */
+#battle-box {
+  width: 100%;
+  border: 3px solid #fff; border-top: none;
+  background: #000;
+  padding: 12px 18px 16px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+@keyframes meditateHintFlash {
+  0%   { color: #ffffff; text-shadow: 0 0 8px #ffff44; }
+  100% { color: #ffff44; text-shadow: none; }
+}
+.meditate-hint-flash {
+  animation: meditateHintFlash 0.25s ease-out forwards;
+}
+@keyframes p8border {
+  0%   { }
+  100% { }
+}
+#battle-box.phase8-horror {
+  animation: none;
+}
+
+/* dialogue */
+#dialogue {
+  font-size: 26px; line-height: 1.4;
+  min-height: 64px; letter-spacing: 0.5px;
+  position: relative; z-index: 2;
+}
+
+/* ── ACTION MENU (Undertale style) ── */
+#menu-area {
+  width: 100%;
+  display: flex; flex-direction: column; gap: 6px;
+  position: relative; z-index: 2;
+}
+
+/* main 4 buttons in a row */
+#actions {
+  display: flex; gap: 0 32px; align-items: center;
+}
+.act-btn {
+  font-family: 'VT323', monospace; font-size: 30px;
+  background: none; color: #fff; border: none; cursor: pointer;
+  padding: 0; letter-spacing: 1px; transition: color 0.08s;
+  white-space: nowrap;
+}
+.act-btn.sel { color: #ffff00; }
+.act-btn.sel::before { content: "* "; font-size: 26px; }
+.act-btn:hover { color: #ffee88; }
+
+/* sub options */
+#sub-actions {
+  display: flex; flex-wrap: wrap; gap: 4px 20px;
+  min-height: 28px;
+}
+.sub-btn {
+  font-family: 'VT323', monospace; font-size: 26px;
+  background: none; color: #aaa; border: none;
+  cursor: pointer; padding: 0; letter-spacing: 1px;
+}
+.sub-btn.sub-sel { color: #ffff00; }
+.sub-btn.sub-sel::before { content: "* "; }
+.sub-btn:hover { color: #ffff00; }
+
+/* ── OVERLAY ── */
+#overlay {
+  display: none; position: fixed; inset: 0; background: #000000cc;
+  align-items: center; justify-content: center; flex-direction: column;
+  z-index: 99; gap: 18px; letter-spacing: 3px;
+}
+#overlay.show { display: flex; }
+#overlay-title { font-size: 44px; text-shadow: 0 0 20px currentColor; }
+#overlay-sub { font-size: 22px; color: #888; }
+#overlay-btn {
+  font-family: 'VT323', monospace; font-size: 28px;
+  background: none; color: #ffff44; border: 2px solid #ffff44;
+  padding: 4px 28px; cursor: pointer; letter-spacing: 2px;
+}
+#overlay-btn:hover { background: #ffff4422; }
+
+/* ── POPUP MODAL (shared by save/load menu + summary key view) ── */
+.popup-modal {
+  display: none; position: fixed; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: #050010; border: 2px solid #553366; z-index: 300;
+  padding: 14px 20px; min-width: 340px; max-width: 92vw;
+  max-height: 82vh; overflow-y: auto;
+}
+.popup-modal.show { display: block; }
+.popup-modal h3 {
+  font-family: 'VT323', monospace; font-size: 15px; color: #8888aa;
+  letter-spacing: 2px; margin: 14px 0 6px; text-transform: uppercase;
+}
+.popup-modal h3:first-of-type { margin-top: 0; }
+.test-btn-row { display: flex; flex-wrap: wrap; gap: 4px; }
+.test-btn {
+  font-family: 'VT323', monospace; font-size: 14px;
+  background: none; border: 1px solid #553366; color: #bbaacc;
+  padding: 2px 8px; cursor: pointer; letter-spacing: 1px;
+}
+.test-btn:hover { background: #55336633; }
+
+/* ── SAVE / LOAD ── */
+.save-input {
+  font-family: 'VT323', monospace; font-size: 15px;
+  background: #0a0510; border: 1px solid #553366; color: #ddccee;
+  padding: 4px 8px; width: 100%; letter-spacing: 1px;
+}
+#save-load-msg { font-size: 13px; margin-top: 6px; min-height: 16px; }

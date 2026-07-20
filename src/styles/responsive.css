@@ -1,0 +1,129 @@
+/* Phone-mode responsive layout, mode-select gate, and on-screen jump button.
+   Applied via a body class ("computer-mode" / "phone-mode") set once by the
+   mode-select gate (see ui/modeSelect.js) — see docs/architecture.md. */
+
+/* Let canvases shrink to fit a narrower container instead of overflowing —
+   harmless on desktop, where the container is always >= the canvas's
+   native pixel size, so this never actually constrains anything there. */
+canvas { max-width: 100%; height: auto; }
+
+/* #game-wrapper keeps its natural 720px desktop layout in phone mode too —
+   ui/modeSelect.js's fitPhoneLayout() applies a uniform transform:scale()
+   so every element (text, padding, canvases) shrinks together instead of
+   only the canvases shrinking via max-width, which used to leave the
+   fixed-size menu/buttons taller than the viewport and clipped off (body
+   has overflow:hidden, so that content was simply unreachable). */
+#game-wrapper { transform-origin: top center; }
+
+/* html,body uses align-items:center (base.css) to vertically center the
+   720px-tall desktop layout. On phone that natural height is often much
+   taller than the viewport, so centering puts its untransformed top ABOVE
+   y=0 — and transform-origin:top scales around that already-offscreen
+   point, pushing the scaled result off BOTH the top and bottom edges
+   equally (boss looks oversized, menu is unreachable below). Top-align
+   instead so the scale-down keeps everything inside [0, viewport height]. */
+/* Guaranteed fallback: even if the JS scale-to-fit (ui/modeSelect.js) is
+   ever off on a given device, let phone mode scroll instead of hard-clipping
+   via base.css's overflow:hidden. There's no time pressure while picking a
+   menu choice — the boss doesn't act until an action is confirmed — so
+   scrolling to reach a lower sub-menu option costs nothing and means
+   content can never be truly unreachable. */
+body.phone-mode {
+  align-items: flex-start;
+  overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
+  /* Kills double-tap-to-zoom cross-browser (including iOS, which ignores
+     the viewport meta tag's zoom-disabling attributes) while still
+     permitting the single-finger pan/scroll above. A stray double-tap
+     while frantically tapping FIGHT or the D-pad shouldn't be able to zoom
+     the page and break the scale-to-fit layout. */
+  touch-action: manipulation;
+}
+/* core/loop.js toggles this class based on S.turn/S.gameOver, only while
+   phone-mode is active. Attacks are real-time — an accidental scroll while
+   dodging would be actively harmful, unlike during the menu (see the
+   overflow-y:auto rule above), where there's no time pressure. */
+body.phone-mode.attack-active { overflow-y: hidden; }
+
+/* The arena canvas is the actual gameplay surface (dodging attacks); the
+   boss canvas is just artwork. Rebalance their natural sizes specifically
+   for phone before the overall scale-to-fit runs, so the arena reads as the
+   bigger, more prominent element after everything is scaled down together
+   — rather than both shrinking by the same uniform factor and the arena
+   staying proportionally as small as it is on desktop. height:auto (global
+   canvas rule above) preserves each canvas's own aspect ratio. */
+body.phone-mode #boss-canvas  { width: 240px; }
+body.phone-mode #arena-canvas {
+  width: 320px;
+  /* Movement is D-pad-only now (no more drag-on-canvas) — a touch starting
+     on the arena itself should be inert, not fall through to body's
+     touch-action:manipulation and pan/scroll the page mid-attack. */
+  touch-action: none;
+}
+/* #boss-section (base.css) has a hardcoded height:340px sized for the full
+   420-wide boss canvas — independent of the canvas's own box, since the
+   canvas is just bottom-aligned inside it. Shrinking the canvas alone
+   wouldn't free any vertical space without also shrinking this, so the
+   arena wouldn't actually gain anything after the outer scale-to-fit. */
+body.phone-mode #boss-section { height: 200px; }
+
+/* ── ARENA ROW: D-pad — arena (phone mode only for the D-pad) ── */
+/* The D-pad lives in normal document flow, flanking the arena canvas,
+   instead of being position:fixed to a viewport corner. That old approach
+   could land on top of the arena ("heart game screen") or the action menu
+   below depending on how much the page had to scale for a given phone —
+   this way it scales and moves together with everything else and
+   structurally can't cover either: the side column is empty when it's
+   hidden (desktop), and on phone it sits beside the arena, which itself
+   sits above the menu in the normal top-to-bottom flow.
+   The 3rd (1fr) column has no content — it's an intentional spacer so the
+   arena canvas (justify-self:center in the middle column) stays balanced
+   opposite the D-pad rather than getting pushed off-center by it. */
+#arena-row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+}
+#arena-row #arena-section { grid-column: 2; justify-self: center; }
+#arena-row #dpad { justify-self: start; }
+
+#dpad {
+  display: none;
+  grid-template-columns: 42px 42px 42px;
+  grid-template-rows: 42px 42px 42px;
+  /* Full 3x3 — 8 direction buttons around an empty center (no button there,
+     nothing to press in the middle of a D-pad). Corner buttons carry two
+     keys each (see data-keys in index.html / ui/touchControls.js) for
+     one-tap diagonal movement, on top of the drag-across-buttons support
+     already covering the same diagonals via two cardinal buttons. */
+  grid-template-areas:
+    "upleft   up    upright"
+    "left     .     right"
+    "downleft down  downright";
+  gap: 4px;
+  /* Listeners are on this container now (ui/touchControls.js), including
+     touchmove for drag-across-buttons — touch-action:none here (not just
+     on .dpad-btn) means a touch landing in the gap between buttons is also
+     inert rather than falling through to body's touch-action:manipulation. */
+  touch-action: none;
+}
+body.phone-mode #dpad { display: grid; }
+.dpad-btn {
+  font-family: 'VT323', monospace; font-size: 18px;
+  background: rgba(255,255,255,0.08); border: 2px solid #fff; color: #fff;
+  border-radius: 8px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  /* Only ever press/release, never a scroll/zoom gesture — the JS
+     preventDefault() in ui/touchControls.js already blocks the browser's
+     default handling, but this makes it unconditional rather than
+     dependent on that call's exact timing. */
+  touch-action: none;
+}
+/* Diagonal arrow glyphs (↖↗↙↘) render a bit larger than ▲◀▶▼ at the same
+   font-size in VT323 — knock it down slightly so all 8 buttons look
+   visually consistent. */
+.dpad-corner { font-size: 15px; }
+.dpad-btn:active { background: rgba(255,255,255,0.25); }
+
+/* ── MODE SELECT GATE ── */
+#mode-select button:hover { background: rgba(255,255,255,0.08); }

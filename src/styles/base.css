@@ -1,0 +1,82 @@
+/* Extracted verbatim from "iron_fist_battle_v8 (2).html" <style> block:
+   reset (lines 9-16), #game-wrapper layout (lines 18-23),
+   boss area / boss visuals / boss HP bar (lines 25-58),
+   arena layout (lines 90-97), stats row / player HP bar (lines 99-107). */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; height: 100%;
+  background: #000;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+body { font-family: 'VT323', monospace; color: #fff; }
+
+#game-wrapper {
+  width: 720px;
+  display: flex;
+  flex-direction: column;
+  background: #000;
+}
+
+/* ── BOSS AREA ── */
+#boss-section {
+  width: 100%; height: 340px;
+  position: relative;
+  display: flex; align-items: flex-end; justify-content: center;
+  background: #000; overflow: hidden;
+}
+#boss-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 100%, #2a0000 0%, #0a0000 40%, #000 75%);
+}
+#boss-bg::before {
+  content: ''; position: absolute; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(255,0,0,0.04) 4px);
+  pointer-events: none;
+}
+#boss-bg::after {
+  content: ''; position: absolute; inset: 0;
+  background:
+    linear-gradient(to bottom, #000 0%, transparent 22%, transparent 70%, #000 100%),
+    linear-gradient(to right,  #000 0%, transparent 14%, transparent 86%, #000 100%);
+  pointer-events: none;
+}
+#boss-canvas { position: relative; z-index: 2; display: block; image-rendering: pixelated; }
+/* pointer-events:none so this full-width box doesn't intercept clicks on
+   siblings (stats-readout, save-btn) that sit in its empty side margins;
+   its own buttons opt back in below. */
+#boss-name-area { position: absolute; top: 14px; left: 0; right: 0; text-align: center; z-index: 3; pointer-events: none; }
+#boss-name-area button { pointer-events: auto; }
+#stats-readout {
+  position: absolute; top: 14px; right: 14px; z-index: 3;
+  font-size: 12px; color: #776677; letter-spacing: 1px; white-space: nowrap;
+}
+#boss-name { font-size: 36px; letter-spacing: 8px; color: #fff; text-shadow: 0 0 14px #ff0000, 0 0 36px #ff000055; }
+#boss-hp-row {
+  position: absolute; bottom: 10px; left: 28px; right: 28px;
+  z-index: 3; display: flex; align-items: center; gap: 10px;
+}
+#boss-hp-text { font-size: 17px; color: #aaa; white-space: nowrap; }
+#boss-hp-outer { flex: 1; height: 16px; border: 2px solid #555; background: #111; }
+#boss-hp-bar { height: 100%; background: #cc2200; width: 100%; transition: width 0.3s; }
+
+/* ── ARENA centered ── */
+#arena-section {
+  display: flex; flex-direction: column; align-items: center; gap: 0;
+  position: relative; z-index: 2;
+}
+#arena-canvas {
+  display: block; border: 3px solid #fff; image-rendering: pixelated;
+}
+
+/* ── STATS ROW ── */
+#stats-row {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 22px; width: 100%;
+  position: relative; z-index: 2;
+}
+#player-hp-outer { flex: 1; height: 15px; border: 2px solid #555; background: #111; }
+#player-hp-bar { height: 100%; background: #ffff00; transition: width 0.2s; }
+#hp-text { font-size: 19px; white-space: nowrap; }
