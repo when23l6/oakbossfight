@@ -90,11 +90,15 @@ body.phone-mode #boss-section { height: 200px; }
    gameplay transform. */
 #arena-row #arena-layout-wrap { grid-column: 2; justify-self: center; }
 #arena-row #dpad { justify-self: start; }
-#arena-layout-wrap { position: relative; }
+/* z-index:1 — the D-pad can now be dragged anywhere via ui/layoutEditor.js,
+   including on top of the arena; without this, DOM order alone would put
+   the arena (later in index.html) above it whenever they overlap. */
+#arena-layout-wrap { position: relative; z-index: 1; }
 
 #dpad {
   display: none;
   position: relative;
+  z-index: 2;
   grid-template-columns: 42px 42px 42px;
   grid-template-rows: 42px 42px 42px;
   /* Full 3x3 — 8 direction buttons around an empty center (no button there,
