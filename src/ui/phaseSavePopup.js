@@ -16,15 +16,14 @@
 // loop() itself makes detection part of the exact same synchronous
 // execution as the transition, closing that gap entirely.
 import { S } from '../state/gameState.js';
-import { encodeSaveCode } from '../state/saveCode.js';
+import { encodeSaveCode, AUTOSAVE_KEY } from '../state/saveCode.js';
 import { getTotalPlayTimeMs, getDeathCount, getPhaseDeathCounts } from '../state/stats.js';
 
-// Every code generated here is also persisted to localStorage under this
-// key, so ui/autoSavePopup.js can offer it back to the player on their next
-// page load if they never copied it out manually. Read/write wrapped in
-// try/catch — localStorage can throw in private browsing (same defensive
-// pattern as state/stats.js).
-const AUTOSAVE_KEY = 'ironFistBattle_autosave';
+// Every code generated here is also persisted to localStorage under
+// AUTOSAVE_KEY, so ui/autoSavePopup.js can offer it back to the player on
+// their next join if they never copied it out manually. Read/write wrapped
+// in try/catch — localStorage can throw in private browsing (same
+// defensive pattern as state/stats.js).
 
 const popup = document.getElementById('phase-save-popup');
 const codeInput = document.getElementById('phase-save-code');

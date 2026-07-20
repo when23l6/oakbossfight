@@ -53,12 +53,14 @@ src/
                      touchControls.js (wires the on-screen d-pad to S.keys[...], phone mode only),
                      phaseSavePopup.js (exports checkPhaseChange(), called from core/loop.js; on any
                      S.phase change, pops up a save code reminder, and also persists that same code
-                     to localStorage under 'ironFistBattle_autosave' for autoSavePopup.js to offer
+                     to localStorage under saveCode.js's AUTOSAVE_KEY for autoSavePopup.js to offer
                      back later), autoSavePopup.js (exports checkAutoSave(), called from
-                     modeSelect.js's chooseMode(); checks localStorage for that key, and if present,
-                     deletes it immediately — delete-on-show — and offers the decoded code back via
-                     a popup with Copy/Load/Close, so closing the tab without manually saving isn't
-                     a dead end), secretTestGui.js (hidden dev tool — a phase-jump popup + a P8
+                     modeSelect.js's chooseMode(); checks localStorage under that same key and, if
+                     present, offers the decoded code back via a popup with Copy/Load/Close — the
+                     entry is left in place afterward, not deleted, so it keeps being offered on
+                     every future join regardless of which URL/link is used, until it's naturally
+                     overwritten by a newer phase-change save or explicitly wiped by CLEAR KEY),
+                     secretTestGui.js (hidden dev tool — a phase-jump popup + a P8
                      corridor-chain attack picker, unlocked only by loading the page with the
                      correct secret code as a ?k= URL param; the code is stored here only as a
                      SHA-256 hash, no visible trigger anywhere), inputBlock.js

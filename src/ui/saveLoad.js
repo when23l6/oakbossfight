@@ -5,7 +5,7 @@
 // (cleared site data, different device) — a code they can copy out is portable.
 import { S } from '../state/gameState.js';
 import { say, updateHP } from './menu.js';
-import { encodeSaveCode, decodeSaveCode, decodeSummaryKey } from '../state/saveCode.js';
+import { encodeSaveCode, decodeSaveCode, decodeSummaryKey, AUTOSAVE_KEY } from '../state/saveCode.js';
 import { getTotalPlayTimeMs, getDeathCount, getPhaseDeathCounts, setStats, resetStats } from '../state/stats.js';
 import { refreshStatsDisplay, formatTime } from './statsDisplay.js';
 import { jumpToPhase } from './phaseJump.js';
@@ -55,10 +55,13 @@ function toggleSaveMenu(){
 // S._madMode back to their defaults, so there's no separate flag reset
 // needed here (and none should be added before jumpToPhase() runs — see
 // applyDecodedSave() above for why setting either flag before a call that
-// triggers initState() silently loses it).
+// triggers initState() silently loses it). Also clears the auto-save
+// localStorage entry (ui/autoSavePopup.js) — otherwise the next join would
+// immediately re-offer the exact progress this button just wiped.
 function clearSaveKey(){
   if(!confirm('Are you sure you want to reset your key? This will send you to start')) return;
   resetStats();
+  try{ localStorage.removeItem(AUTOSAVE_KEY); }catch(e){}
   jumpToPhase(1, 10);
   say('What will you do?');
   refreshStatsDisplay();

@@ -10,6 +10,14 @@
 const XOR_KEY = 'IRONFIST';
 const SAVE_PHASE_COUNT = 9;
 
+// localStorage key the auto-save feature persists the latest code under —
+// written by ui/phaseSavePopup.js on every S.phase change, read/offered by
+// ui/autoSavePopup.js on every join, and cleared by ui/saveLoad.js's
+// clearSaveKey(). Defined here (rather than in any of those three) since all
+// three need it and none of them should import from each other for just a
+// string constant.
+export const AUTOSAVE_KEY = 'ironFistBattle_autosave';
+
 function xorString(str, key){
   let out = '';
   for(let i=0;i<str.length;i++){

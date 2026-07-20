@@ -11,21 +11,20 @@
 // sits at z-index 1000, above this popup's 650, and shows unconditionally
 // on every page load — running the check earlier would show this popup
 // correctly but leave it stuck invisible underneath the gate until
-// dismissed, entirely dependent on z-index stacking behaving identically
-// across every browser/device for a feature where a failed render is
-// unrecoverable (the localStorage copy is already deleted by then).
-// Triggering it from chooseMode() instead means it always shows into a
-// scene that's already clear.
+// dismissed. Triggering it from chooseMode() instead means it always shows
+// into a scene that's already clear.
 //
-// The stored code is deleted from localStorage the instant it's found
-// (delete-on-show), regardless of what the player does with it afterward —
-// COPY/LOAD/CLOSE below all operate on the in-memory copy captured before
-// the delete, per the finalized design.
-import { decodeSaveCode } from '../state/saveCode.js';
+// The stored code is left in localStorage after being shown — it keeps
+// being offered on every future join (whatever URL/link that join uses;
+// this has nothing to do with ?k= test mode, it's the same localStorage
+// either way) until it's naturally superseded by a newer one. That happens
+// automatically the next time S.phase actually changes during play (see
+// phaseSavePopup.js's showPhaseSavePopup(), which overwrites this same key),
+// or explicitly via CLEAR KEY (ui/saveLoad.js's clearSaveKey()), which wipes
+// it along with everything else the key represents.
+import { decodeSaveCode, AUTOSAVE_KEY } from '../state/saveCode.js';
 import { formatTime } from './statsDisplay.js';
 import { applyDecodedSave } from './saveLoad.js';
-
-const AUTOSAVE_KEY = 'ironFistBattle_autosave';
 
 const popup = document.getElementById('auto-save-popup');
 const codeInput = document.getElementById('auto-save-code');
@@ -36,16 +35,14 @@ const msg = document.getElementById('auto-save-msg');
 // (core/input.js).
 popup.addEventListener('click', e=>{ e.stopPropagation(); });
 
-// The decoded save this popup is currently offering, kept in memory since
-// the localStorage copy is deleted as soon as it's read. Null once no offer
-// is pending (nothing to LOAD).
+// The decoded save this popup is currently offering. Null once no offer is
+// pending (nothing to LOAD).
 let pendingData = null;
 
 function checkAutoSave(){
   let raw = null;
   try{
     raw = localStorage.getItem(AUTOSAVE_KEY);
-    if(raw != null) localStorage.removeItem(AUTOSAVE_KEY);
   }catch(e){
     return;
   }
