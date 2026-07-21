@@ -5,6 +5,13 @@
 // Persisted to localStorage independent of the save key, same reasoning as
 // state/phoneLayout.js: a device/UI preference, not game progress, so
 // CLEAR KEY and the every-join stats reset (main.js) don't touch it.
+//
+// setEnabled(true) below also taints S._usedGameSpeed (state/gameState.js)
+// — unlike this module's own on/off state, that flag lives on S because
+// it's baked into every save code from that point on (state/saveCode.js),
+// same permanent-taint treatment as S._usedTestGui/_madMode.
+import { S } from './gameState.js';
+
 const STORAGE_KEY = 'ironFistBattle_gameSpeed';
 export const MIN_RATE = 15;
 export const MAX_RATE = 120;
@@ -45,6 +52,7 @@ export function setRate(n){
 
 export function setEnabled(on){
   state.enabled = on;
+  if(on) S._usedGameSpeed = true;
   save();
 }
 

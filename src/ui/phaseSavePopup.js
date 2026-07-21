@@ -43,6 +43,7 @@ function showPhaseSavePopup(){
     totalPlayTimeMs: getTotalPlayTimeMs(),
     usedTestGui: S._usedTestGui,
     madMode: S._madMode,
+    usedGameSpeed: S._usedGameSpeed,
     phaseDeathCounts: getPhaseDeathCounts(),
   });
   try{ localStorage.setItem(AUTOSAVE_KEY, codeInput.value); }catch(e){}

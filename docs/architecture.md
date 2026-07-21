@@ -25,22 +25,24 @@ src/
                      mode/phone-mode class; styles #arena-row, which flanks the arena canvas with the
                      d-pad control so it scales/moves with the layout, not a fixed corner)
   state/             constants.js, gameState.js (S + initState, incl. S._usedTestGui — set by the
-                     hidden dev GUI below — and S._madMode — set when taunt #25 unlocks at
-                     phase>=7, drops S.playerMax to 10 — neither surfaced in the UI), cutsceneState.js
+                     hidden dev GUI below, never surfaced in the UI — S._madMode — set when taunt
+                     #25 unlocks at phase>=7, drops S.playerMax to 10 — and S._usedGameSpeed — set
+                     by gameSpeed.js's setEnabled(true); madMode and usedGameSpeed are both shown
+                     via the decoded-key displays below, unlike usedTestGui), cutsceneState.js
                      (CS), dialogue.js (D), stats.js (this session's play-time/death-count + per-
                      phase death counts, persisted to localStorage so they survive within a session
                      but not reset by initState() itself — main.js explicitly calls resetStats()
                      right after initState() on every join instead, so the key always starts clean;
                      the only way old stats come back is loading a code), saveCode.js
                      (encode/decode the portable save-code + summary-key strings; save code
-                     silently carries usedTestGui (never shown in any UI) + madMode (shown wherever
-                     decoded key info is displayed — the auto-save popup, the pre-load confirm, the
-                     summary-key popup; see ui/autoSavePopup.js / ui/saveLoad.js) + per-phase death
-                     counts. The summary key — shown read-only at the end of credits,
-                     minigames/credits.js — carries that exact same field set PLUS its own
-                     per-phase time breakdown, full parity for decoding purposes, but stays
-                     permanently unloadable: different marker and field count (26 parts vs. the
-                     save code's 16) means decodeSaveCode() always rejects it outright, no
+                     silently carries usedTestGui (never shown in any UI) + madMode + usedGameSpeed
+                     (both shown wherever decoded key info is displayed — the auto-save popup, the
+                     pre-load confirm, the summary-key popup; see ui/autoSavePopup.js /
+                     ui/saveLoad.js) + per-phase death counts. The summary key — shown read-only at
+                     the end of credits, minigames/credits.js — carries that exact same field set
+                     PLUS its own per-phase time breakdown, full parity for decoding purposes, but
+                     stays permanently unloadable: different marker and field count (27 parts vs.
+                     the save code's 17) means decodeSaveCode() always rejects it outright, no
                      special-case check needed), phoneLayout.js
                      (custom D-pad/arena/dialogue position+scale overrides set via
                      ui/layoutEditor.js, persisted to localStorage separately from the save key — a
@@ -48,7 +50,9 @@ src/
                      reset above don't touch it), gameSpeed.js (custom simulation tick rate —
                      {enabled, rate, keybind} — set via ui/gameSpeedPanel.js, same localStorage-
                      separate-from-save-key treatment as phoneLayout.js; rate is clamped to
-                     MIN_RATE=15..MAX_RATE=120 in setRate() itself, not by callers)
+                     MIN_RATE=15..MAX_RATE=120 in setRate() itself, not by callers; setEnabled(true)
+                     also taints S._usedGameSpeed — that flag lives on S, not here, since it's baked
+                     into every save code from that point on, unlike this module's own on/off state)
   core/              canvasRefs.js (DOM/canvas refs), particles.js, input.js (listeners), loop.js
                      (fixed-timestep accumulator: loop(now) runs updateOnce() 1+ times per rAF
                      callback — more than once if the render-frame gap implies fps<15, capped at

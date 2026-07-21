@@ -1,16 +1,16 @@
 // Portable save code: encodes {phase, items, deathCount, totalPlayTimeMs,
-// usedTestGui, madMode, phaseDeathCounts} into a compact, copy-pasteable
-// string, and decodes it back. Not real cryptography — an XOR scramble +
-// checksum so a pasted-in code round-trips reliably and casual tampering is
-// caught, without needing any library. usedTestGui is carried along
-// silently (not surfaced anywhere in the UI, see state/gameState.js's
-// S._usedTestGui) — decoding a code is the only way to recover it. madMode
-// IS shown wherever a decoded code's info is displayed (the auto-save
-// popup, the pre-load confirm, the summary-key popup) — see
-// ui/autoSavePopup.js / ui/saveLoad.js. phaseDeathCounts is an object keyed
-// 1-9 (death count per phase, see state/stats.js). See encodeSummaryKey/
-// decodeSummaryKey below for the read-only counterpart that carries these
-// same fields plus phaseTimesMs.
+// usedTestGui, madMode, usedGameSpeed, phaseDeathCounts} into a compact,
+// copy-pasteable string, and decodes it back. Not real cryptography — an
+// XOR scramble + checksum so a pasted-in code round-trips reliably and
+// casual tampering is caught, without needing any library. usedTestGui is
+// carried along silently (not surfaced anywhere in the UI, see
+// state/gameState.js's S._usedTestGui) — decoding a code is the only way
+// to recover it. madMode and usedGameSpeed ARE shown wherever a decoded
+// code's info is displayed (the auto-save popup, the pre-load confirm, the
+// summary-key popup) — see ui/autoSavePopup.js / ui/saveLoad.js.
+// phaseDeathCounts is an object keyed 1-9 (death count per phase, see
+// state/stats.js). See encodeSummaryKey/decodeSummaryKey below for the
+// read-only counterpart that carries these same fields plus phaseTimesMs.
 const XOR_KEY = 'IRONFIST';
 const SAVE_PHASE_COUNT = 9;
 
@@ -36,10 +36,10 @@ function checksum(str){
   return sum;
 }
 
-export function encodeSaveCode({ phase, items, deathCount, totalPlayTimeMs, usedTestGui, madMode, phaseDeathCounts }){
+export function encodeSaveCode({ phase, items, deathCount, totalPlayTimeMs, usedTestGui, madMode, usedGameSpeed, phaseDeathCounts }){
   const pdc = [];
   for(let p=1; p<=SAVE_PHASE_COUNT; p++) pdc.push((phaseDeathCounts && phaseDeathCounts[p]) || 0);
-  const payload = [phase, items, deathCount, totalPlayTimeMs, usedTestGui?1:0, madMode?1:0, ...pdc].join('|');
+  const payload = [phase, items, deathCount, totalPlayTimeMs, usedTestGui?1:0, madMode?1:0, usedGameSpeed?1:0, ...pdc].join('|');
   const full = `${payload}|${checksum(payload)}`;
   const scrambled = xorString(full, XOR_KEY);
   return btoa(unescape(encodeURIComponent(scrambled)));
@@ -50,20 +50,20 @@ export function decodeSaveCode(code){
     const scrambled = decodeURIComponent(escape(atob(code.trim())));
     const full = xorString(scrambled, XOR_KEY);
     const parts = full.split('|');
-    // phase, items, deathCount, totalPlayTimeMs, usedTestGui, madMode, 9x phaseDeathCounts, checksum
-    if(parts.length !== 6 + SAVE_PHASE_COUNT + 1) return null;
+    // phase, items, deathCount, totalPlayTimeMs, usedTestGui, madMode, usedGameSpeed, 9x phaseDeathCounts, checksum
+    if(parts.length !== 7 + SAVE_PHASE_COUNT + 1) return null;
     const cs = parts[parts.length - 1];
     const fields = parts.slice(0, -1);
     const payload = fields.join('|');
     if(String(checksum(payload)) !== cs) return null;
     const nums = fields.map(n=>parseInt(n,10));
     if(nums.some(n=>Number.isNaN(n))) return null;
-    const [phaseNum, itemsNum, deathNum, timeNum, testGuiNum, madModeNum, ...pdcNums] = nums;
+    const [phaseNum, itemsNum, deathNum, timeNum, testGuiNum, madModeNum, gameSpeedNum, ...pdcNums] = nums;
     const phaseDeathCounts = {};
     pdcNums.forEach((c, idx)=>{ phaseDeathCounts[idx+1] = c; });
     return {
       phase: phaseNum, items: itemsNum, deathCount: deathNum, totalPlayTimeMs: timeNum,
-      usedTestGui: !!testGuiNum, madMode: !!madModeNum, phaseDeathCounts,
+      usedTestGui: !!testGuiNum, madMode: !!madModeNum, usedGameSpeed: !!gameSpeedNum, phaseDeathCounts,
     };
   }catch(e){
     return null;
@@ -72,24 +72,25 @@ export function decodeSaveCode(code){
 
 // Portable summary key: encodes the exact same fields as the regular save
 // code above (phase, items, deathCount, totalPlayTimeMs, usedTestGui,
-// madMode, phaseDeathCounts) PLUS phaseTimesMs (per-phase time spent,
-// unique to this format) — full parity for sharing/display/decoding
-// purposes, while remaining permanently unloadable: deliberately distinct
-// from the save code (different marker + a different field count, 26 parts
-// here vs. 16 there) so decodeSaveCode() always rejects it outright — no
-// special-case check needed, the shapes just don't match. usedTestGui stays
-// unsurfaced in the visible summary popup UI (ui/saveLoad.js's
-// showSummaryPopup()), same as for the regular save code — decoding is
-// still the only way to recover it. madMode IS shown there.
+// madMode, usedGameSpeed, phaseDeathCounts) PLUS phaseTimesMs (per-phase
+// time spent, unique to this format) — full parity for sharing/display/
+// decoding purposes, while remaining permanently unloadable: deliberately
+// distinct from the save code (different marker + a different field count,
+// 27 parts here vs. 17 there) so decodeSaveCode() always rejects it
+// outright — no special-case check needed, the shapes just don't match.
+// usedTestGui stays unsurfaced in the visible summary popup UI
+// (ui/saveLoad.js's showSummaryPopup()), same as for the regular save code
+// — decoding is still the only way to recover it. madMode and
+// usedGameSpeed ARE shown there.
 const SUMMARY_MARKER = 'SUMMARY';
 const SUMMARY_PHASE_COUNT = 9;
 
-export function encodeSummaryKey({ phase, items, deathCount, totalPlayTimeMs, usedTestGui, madMode, phaseDeathCounts, phaseTimesMs }){
+export function encodeSummaryKey({ phase, items, deathCount, totalPlayTimeMs, usedTestGui, madMode, usedGameSpeed, phaseDeathCounts, phaseTimesMs }){
   const pdc = [];
   for(let p=1; p<=SAVE_PHASE_COUNT; p++) pdc.push((phaseDeathCounts && phaseDeathCounts[p]) || 0);
   const ptm = [];
   for(let p=1; p<=SUMMARY_PHASE_COUNT; p++) ptm.push((phaseTimesMs && phaseTimesMs[p]) || 0);
-  const payload = [SUMMARY_MARKER, phase, items, deathCount, totalPlayTimeMs, usedTestGui?1:0, madMode?1:0, ...pdc, ...ptm].join('|');
+  const payload = [SUMMARY_MARKER, phase, items, deathCount, totalPlayTimeMs, usedTestGui?1:0, madMode?1:0, usedGameSpeed?1:0, ...pdc, ...ptm].join('|');
   const full = `${payload}|${checksum(payload)}`;
   const scrambled = xorString(full, XOR_KEY);
   return btoa(unescape(encodeURIComponent(scrambled)));
@@ -101,8 +102,8 @@ export function decodeSummaryKey(code){
     const full = xorString(scrambled, XOR_KEY);
     const parts = full.split('|');
     // marker, phase, items, deathCount, totalPlayTimeMs, usedTestGui, madMode,
-    // 9x phaseDeathCounts, 9x phaseTimesMs, checksum
-    if(parts.length !== 1 + 6 + SAVE_PHASE_COUNT + SUMMARY_PHASE_COUNT + 1) return null;
+    // usedGameSpeed, 9x phaseDeathCounts, 9x phaseTimesMs, checksum
+    if(parts.length !== 1 + 7 + SAVE_PHASE_COUNT + SUMMARY_PHASE_COUNT + 1) return null;
     const marker = parts[0];
     if(marker !== SUMMARY_MARKER) return null;
     const cs = parts[parts.length - 1];
@@ -112,7 +113,7 @@ export function decodeSummaryKey(code){
     const numFields = fields.slice(1); // drop the marker before parsing as numbers
     const nums = numFields.map(n=>parseInt(n,10));
     if(nums.some(n=>Number.isNaN(n))) return null;
-    const [phaseNum, itemsNum, deathNum, timeNum, testGuiNum, madModeNum, ...rest] = nums;
+    const [phaseNum, itemsNum, deathNum, timeNum, testGuiNum, madModeNum, gameSpeedNum, ...rest] = nums;
     const pdcNums = rest.slice(0, SAVE_PHASE_COUNT);
     const ptmNums = rest.slice(SAVE_PHASE_COUNT, SAVE_PHASE_COUNT + SUMMARY_PHASE_COUNT);
     const phaseDeathCounts = {};
@@ -121,7 +122,8 @@ export function decodeSummaryKey(code){
     ptmNums.forEach((ms, idx)=>{ phaseTimesMs[idx+1] = ms; });
     return {
       phase: phaseNum, items: itemsNum, deathCount: deathNum, totalPlayTimeMs: timeNum,
-      usedTestGui: !!testGuiNum, madMode: !!madModeNum, phaseDeathCounts, phaseTimesMs,
+      usedTestGui: !!testGuiNum, madMode: !!madModeNum, usedGameSpeed: !!gameSpeedNum,
+      phaseDeathCounts, phaseTimesMs,
     };
   }catch(e){
     return null;

@@ -88,6 +88,7 @@ function showSummaryKey(){
     totalPlayTimeMs: getTotalPlayTimeMs(),
     usedTestGui: S._usedTestGui,
     madMode: S._madMode,
+    usedGameSpeed: S._usedGameSpeed,
     phaseDeathCounts: getPhaseDeathCounts(),
     phaseTimesMs: S.phaseTimesMs,
   });

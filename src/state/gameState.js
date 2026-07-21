@@ -61,5 +61,13 @@ export function initState(){
     // playthrough (see state/saveCode.js) so reloading a save doesn't
     // silently undo the debuff.
     _madMode:false,
+    // Set true the moment custom gamespeed is turned on (state/gameSpeed.js's
+    // setEnabled(true), from ui/gameSpeedPanel.js's toggle button or its
+    // keybind) — stays true even if later turned back off, same permanent-
+    // taint semantics as _usedTestGui/_madMode above. Carried into every
+    // save code generated for the rest of this playthrough (see
+    // state/saveCode.js) and shown wherever a decoded code's info is
+    // displayed, same as _madMode.
+    _usedGameSpeed:false,
   };
 }

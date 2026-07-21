@@ -31,6 +31,7 @@ function refreshSaveCodeOutput(){
     totalPlayTimeMs: getTotalPlayTimeMs(),
     usedTestGui: S._usedTestGui,
     madMode: S._madMode,
+    usedGameSpeed: S._usedGameSpeed,
     phaseDeathCounts: getPhaseDeathCounts(),
   });
 }
@@ -52,10 +53,11 @@ function toggleSaveMenu(){
 // per-phase deaths) back to zero and sends the player back to the start of
 // phase 1 — a full reset, not just what's displayed in the key. jumpToPhase()
 // calls initState() internally, which already zeroes S._usedTestGui/
-// S._madMode back to their defaults, so there's no separate flag reset
-// needed here (and none should be added before jumpToPhase() runs — see
-// applyDecodedSave() above for why setting either flag before a call that
-// triggers initState() silently loses it). Also clears the auto-save
+// S._madMode/S._usedGameSpeed back to their defaults, so there's no
+// separate flag reset needed here (and none should be added before
+// jumpToPhase() runs — see applyDecodedSave() above for why setting any of
+// them before a call that triggers initState() silently loses it). Also
+// clears the auto-save
 // localStorage entry (ui/autoSavePopup.js) — otherwise the next join would
 // immediately re-offer the exact progress this button just wiped.
 function clearSaveKey(){
@@ -97,6 +99,7 @@ function showSummaryPopup(data){
   document.getElementById('summary-total-time').textContent = formatTime(data.totalPlayTimeMs);
   document.getElementById('summary-deaths').textContent = String(data.deathCount);
   document.getElementById('summary-madmode').textContent = data.madMode ? 'Yes' : 'No';
+  document.getElementById('summary-gamespeed').textContent = data.usedGameSpeed ? 'Yes' : 'No';
 
   document.getElementById('save-menu').classList.remove('show');
   document.getElementById('summary-view-modal').classList.add('show');
@@ -111,24 +114,25 @@ function toggleSummaryView(){
 
 // Applies an already-decoded save object (see state/saveCode.js's
 // decodeSaveCode — {phase, items, deathCount, totalPlayTimeMs, usedTestGui,
-// madMode, phaseDeathCounts}) to the live game: restores lifetime stats,
-// jumps gameplay state to the saved phase/items, restores the usedTestGui/
-// madMode flags (and reapplies the mad-mode HP debuff), and prints the
-// "what will you do?" line. Extracted out of loadSaveCode()
-// below so ui/autoSavePopup.js's LOAD button can share this exact same
-// apply path instead of duplicating it — both are just different UIs for
-// getting a decoded save object here.
+// madMode, usedGameSpeed, phaseDeathCounts}) to the live game: restores
+// lifetime stats, jumps gameplay state to the saved phase/items, restores
+// the usedTestGui/madMode/usedGameSpeed flags (and reapplies the mad-mode
+// HP debuff), and prints the "what will you do?" line. Extracted out of
+// loadSaveCode() below so ui/autoSavePopup.js's LOAD button can share this
+// exact same apply path instead of duplicating it — both are just
+// different UIs for getting a decoded save object here.
 function applyDecodedSave(data){
   setStats(data.deathCount, data.totalPlayTimeMs, data.phaseDeathCounts);
   refreshStatsDisplay();
 
   jumpToPhase(data.phase, data.items);
-  // jumpToPhase() calls initState(), which resets S._usedTestGui/_madMode to
-  // false — restore whatever the loaded code actually carried instead of
-  // silently clearing it, so loading a save can't be used to erase that
-  // history (or undo the mad-mode HP debuff below).
+  // jumpToPhase() calls initState(), which resets S._usedTestGui/_madMode/
+  // _usedGameSpeed to false — restore whatever the loaded code actually
+  // carried instead of silently clearing it, so loading a save can't be
+  // used to erase that history (or undo the mad-mode HP debuff below).
   S._usedTestGui = data.usedTestGui;
   S._madMode = data.madMode;
+  S._usedGameSpeed = data.usedGameSpeed;
   if(data.madMode){
     S.playerMax = 10;
     S.playerHP = Math.min(S.playerHP, 10);
@@ -159,7 +163,8 @@ function loadSaveCode(){
     + `Items: ${data.items}\n`
     + `Deaths: ${data.deathCount}\n`
     + `Time: ${formatTime(data.totalPlayTimeMs)}\n`
-    + `Mad Mode: ${data.madMode ? 'Yes' : 'No'}`;
+    + `Mad Mode: ${data.madMode ? 'Yes' : 'No'}\n`
+    + `Game Speed Used: ${data.usedGameSpeed ? 'Yes' : 'No'}`;
   if(!confirm(confirmMsg)) return;
 
   applyDecodedSave(data);
