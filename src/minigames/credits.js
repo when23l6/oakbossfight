@@ -1,6 +1,6 @@
 import { S } from '../state/gameState.js';
 import { encodeSummaryKey } from '../state/saveCode.js';
-import { getTotalPlayTimeMs, getDeathCount } from '../state/stats.js';
+import { getTotalPlayTimeMs, getDeathCount, getPhaseDeathCounts } from '../state/stats.js';
 
 // ── CREDITS ────────────────────────────────────
 export function beginCredits(){
@@ -82,9 +82,14 @@ export function beginCredits(){
 // state/saveCode.js decodeSummaryKey / ui/saveLoad.js's popup for that path).
 function showSummaryKey(){
   const summaryKey=encodeSummaryKey({
-    phaseTimesMs: S.phaseTimesMs,
-    totalPlayTimeMs: getTotalPlayTimeMs(),
+    phase: S.phase,
+    items: S.items,
     deathCount: getDeathCount(),
+    totalPlayTimeMs: getTotalPlayTimeMs(),
+    usedTestGui: S._usedTestGui,
+    madMode: S._madMode,
+    phaseDeathCounts: getPhaseDeathCounts(),
+    phaseTimesMs: S.phaseTimesMs,
   });
 
   const wrap=document.createElement('div');
