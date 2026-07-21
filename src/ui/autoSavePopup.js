@@ -57,6 +57,7 @@ function checkAutoSave(){
   document.getElementById('auto-save-items').textContent = String(data.items);
   document.getElementById('auto-save-deaths').textContent = String(data.deathCount);
   document.getElementById('auto-save-time').textContent = formatTime(data.totalPlayTimeMs);
+  document.getElementById('auto-save-madmode').textContent = data.madMode ? 'Yes' : 'No';
   msg.textContent = '';
   popup.style.display = 'flex';
 }

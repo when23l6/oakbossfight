@@ -87,15 +87,16 @@ function copySaveCode(){
   }
 }
 
-// Fills in the read-only summary-key popup from a decoded
-// {phaseTimesMs, totalPlayTimeMs, deathCount} object. Never touches game
-// state (S), stats, or the DOM reset that loadSaveCode does below.
+// Fills in the read-only summary-key popup from a decoded summary object
+// (state/saveCode.js's decodeSummaryKey). Never touches game state (S),
+// stats, or the DOM reset that loadSaveCode does below.
 function showSummaryPopup(data){
   for(let p=1; p<=SUMMARY_PHASE_COUNT; p++){
     document.getElementById(`summary-phase-${p}`).textContent = formatTime(data.phaseTimesMs[p] || 0);
   }
   document.getElementById('summary-total-time').textContent = formatTime(data.totalPlayTimeMs);
   document.getElementById('summary-deaths').textContent = String(data.deathCount);
+  document.getElementById('summary-madmode').textContent = data.madMode ? 'Yes' : 'No';
 
   document.getElementById('save-menu').classList.remove('show');
   document.getElementById('summary-view-modal').classList.add('show');
@@ -111,9 +112,9 @@ function toggleSummaryView(){
 // Applies an already-decoded save object (see state/saveCode.js's
 // decodeSaveCode — {phase, items, deathCount, totalPlayTimeMs, usedTestGui,
 // madMode, phaseDeathCounts}) to the live game: restores lifetime stats,
-// jumps gameplay state to the saved phase/items, restores the hidden
-// usedTestGui/madMode taint flags (and reapplies the mad-mode HP debuff),
-// and prints the "what will you do?" line. Extracted out of loadSaveCode()
+// jumps gameplay state to the saved phase/items, restores the usedTestGui/
+// madMode flags (and reapplies the mad-mode HP debuff), and prints the
+// "what will you do?" line. Extracted out of loadSaveCode()
 // below so ui/autoSavePopup.js's LOAD button can share this exact same
 // apply path instead of duplicating it — both are just different UIs for
 // getting a decoded save object here.
@@ -157,7 +158,8 @@ function loadSaveCode(){
     + `Phase: ${data.phase}\n`
     + `Items: ${data.items}\n`
     + `Deaths: ${data.deathCount}\n`
-    + `Time: ${formatTime(data.totalPlayTimeMs)}`;
+    + `Time: ${formatTime(data.totalPlayTimeMs)}\n`
+    + `Mad Mode: ${data.madMode ? 'Yes' : 'No'}`;
   if(!confirm(confirmMsg)) return;
 
   applyDecodedSave(data);

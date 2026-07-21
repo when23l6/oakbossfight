@@ -2,12 +2,15 @@
 // usedTestGui, madMode, phaseDeathCounts} into a compact, copy-pasteable
 // string, and decodes it back. Not real cryptography — an XOR scramble +
 // checksum so a pasted-in code round-trips reliably and casual tampering is
-// caught, without needing any library. usedTestGui and madMode are carried
-// along silently (not surfaced anywhere in the UI, see state/gameState.js's
-// S._usedTestGui / S._madMode) — decoding a code is the only way to recover
-// them. phaseDeathCounts is an object keyed 1-9 (death count per phase, see
-// state/stats.js). See encodeSummaryKey/decodeSummaryKey below for the
-// read-only counterpart that carries these same fields plus phaseTimesMs.
+// caught, without needing any library. usedTestGui is carried along
+// silently (not surfaced anywhere in the UI, see state/gameState.js's
+// S._usedTestGui) — decoding a code is the only way to recover it. madMode
+// IS shown wherever a decoded code's info is displayed (the auto-save
+// popup, the pre-load confirm, the summary-key popup) — see
+// ui/autoSavePopup.js / ui/saveLoad.js. phaseDeathCounts is an object keyed
+// 1-9 (death count per phase, see state/stats.js). See encodeSummaryKey/
+// decodeSummaryKey below for the read-only counterpart that carries these
+// same fields plus phaseTimesMs.
 const XOR_KEY = 'IRONFIST';
 const SAVE_PHASE_COUNT = 9;
 
@@ -74,10 +77,10 @@ export function decodeSaveCode(code){
 // purposes, while remaining permanently unloadable: deliberately distinct
 // from the save code (different marker + a different field count, 26 parts
 // here vs. 16 there) so decodeSaveCode() always rejects it outright — no
-// special-case check needed, the shapes just don't match. usedTestGui and
-// madMode stay unsurfaced in the visible summary popup UI (ui/saveLoad.js's
-// showSummaryPopup()), same as they are for the regular save code —
-// decoding is still the only way to recover them.
+// special-case check needed, the shapes just don't match. usedTestGui stays
+// unsurfaced in the visible summary popup UI (ui/saveLoad.js's
+// showSummaryPopup()), same as for the regular save code — decoding is
+// still the only way to recover it. madMode IS shown there.
 const SUMMARY_MARKER = 'SUMMARY';
 const SUMMARY_PHASE_COUNT = 9;
 

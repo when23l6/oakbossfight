@@ -33,12 +33,15 @@ src/
                      right after initState() on every join instead, so the key always starts clean;
                      the only way old stats come back is loading a code), saveCode.js
                      (encode/decode the portable save-code + summary-key strings; save code
-                     silently carries usedTestGui + madMode + per-phase death counts. The summary
-                     key — shown read-only at the end of credits, minigames/credits.js — carries
-                     that exact same field set PLUS its own per-phase time breakdown, full parity
-                     for decoding purposes, but stays permanently unloadable: different marker and
-                     field count (26 parts vs. the save code's 16) means decodeSaveCode() always
-                     rejects it outright, no special-case check needed), phoneLayout.js
+                     silently carries usedTestGui (never shown in any UI) + madMode (shown wherever
+                     decoded key info is displayed — the auto-save popup, the pre-load confirm, the
+                     summary-key popup; see ui/autoSavePopup.js / ui/saveLoad.js) + per-phase death
+                     counts. The summary key — shown read-only at the end of credits,
+                     minigames/credits.js — carries that exact same field set PLUS its own
+                     per-phase time breakdown, full parity for decoding purposes, but stays
+                     permanently unloadable: different marker and field count (26 parts vs. the
+                     save code's 16) means decodeSaveCode() always rejects it outright, no
+                     special-case check needed), phoneLayout.js
                      (custom D-pad/arena/dialogue position+scale overrides set via
                      ui/layoutEditor.js, persisted to localStorage separately from the save key — a
                      device/UI preference, not game progress, so CLEAR KEY and the every-join stats
